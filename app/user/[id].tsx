@@ -66,7 +66,7 @@ export default function UserProfileScreen() {
             </View>
             <View style={styles.profileStatItem}>
               <Text style={[styles.profileStatValue, { color: colors.text }]}>{user.following}</Text>
-              <Text style={[styles.profileStatLabel, { color: colors.textSecondary }]}>Following</Text>
+              <Text style={[styles.profileStatLabel, { color: colors.textSecondary }]}>Friends</Text>
             </View>
           </View>
 

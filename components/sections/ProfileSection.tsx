@@ -5,7 +5,7 @@ import { PostCard } from '../PostCard';
 import { Spacing, BorderRadius } from '../../constants/theme';
 import { SCREEN_WIDTH } from './constants';
 
-export const ProfileSection = ({ colors, posts }: any) => {
+export const ProfileSection = ({ colors, posts, router }: any) => {
   return (
     <ScrollView style={[styles.sectionContainer, { width: SCREEN_WIDTH }]} contentContainerStyle={{ paddingBottom: 120 }}>
       <View style={styles.profileCentered}>
@@ -13,7 +13,8 @@ export const ProfileSection = ({ colors, posts }: any) => {
           <Avatar size={100} uri="https://i.pravatar.cc/150?u=me" />
         </View>
         
-        <Text style={[styles.profileHandleLarge, { color: colors.text }]}>@yourhandle</Text>
+        <Text style={[styles.profileNameLarge, { color: colors.text }]}>Human Being</Text>
+        <Text style={[styles.profileHandleLarge, { color: colors.textSecondary }]}>@yourhandle</Text>
         <Text style={[styles.profileBioCentered, { color: colors.textSecondary }]}>
           Human. Thinker. Explorer. 🌿{"\n"}Building Veritas for a better social web.
         </Text>
@@ -25,11 +26,14 @@ export const ProfileSection = ({ colors, posts }: any) => {
           </View>
           <View style={styles.profileStatItem}>
             <Text style={[styles.profileStatValue, { color: colors.text }]}>420</Text>
-            <Text style={[styles.profileStatLabel, { color: colors.textSecondary }]}>Following</Text>
+            <Text style={[styles.profileStatLabel, { color: colors.textSecondary }]}>Friends</Text>
           </View>
         </View>
 
-        <TouchableOpacity style={[styles.profileEditButton, { borderColor: colors.border }]}>
+        <TouchableOpacity 
+          style={[styles.profileEditButton, { borderColor: colors.border }]}
+          onPress={() => router.push('/edit-profile')}
+        >
           <Text style={[styles.profileEditButtonText, { color: colors.text }]}>Edit Profile</Text>
         </TouchableOpacity>
       </View>
@@ -55,9 +59,13 @@ const styles = StyleSheet.create({
   profileAvatarLarge: {
     marginBottom: Spacing.md,
   },
+  profileNameLarge: {
+    fontSize: 22,
+    fontWeight: '800',
+  },
   profileHandleLarge: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 16,
+    fontWeight: '600',
     marginBottom: Spacing.sm,
   },
   profileBioCentered: {

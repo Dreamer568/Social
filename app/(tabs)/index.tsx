@@ -104,14 +104,14 @@ const MOCK_POSTS: PostProps[] = [
 ];
 
 const MOCK_MESSAGES = [
-  { id: '1', user: { name: 'David Miller', handle: 'davidm', avatar_url: 'https://i.pravatar.cc/150?u=david' }, lastMessage: 'See you tomorrow at the cafe!', time: '10:30 AM', unread: 2 },
-  { id: '2', user: { name: 'Elena Rodriguez', handle: 'elena_r', avatar_url: 'https://i.pravatar.cc/150?u=elena' }, lastMessage: 'That photo you posted is amazing!', time: 'Yesterday', unread: 0 },
-  { id: '3', user: { name: 'Marcus Chen', handle: 'mchen', avatar_url: 'https://i.pravatar.cc/150?u=marcus' }, lastMessage: 'Do you have the link to that book you mentioned?', time: '9:45 AM', unread: 1 },
-  { id: '4', user: { name: 'Chloe Bennett', handle: 'chloeb', avatar_url: 'https://i.pravatar.cc/150?u=chloe' }, lastMessage: 'I completely agree with your last post.', time: '8:15 AM', unread: 0 },
-  { id: '5', user: { name: 'Lucas Thorne', handle: 'lthorne', avatar_url: 'https://i.pravatar.cc/150?u=lucas' }, lastMessage: 'Are we still on for the gallery opening?', time: 'Monday', unread: 0 },
-  { id: '6', user: { name: 'Aria Stark', handle: 'astark', avatar_url: 'https://i.pravatar.cc/150?u=aria' }, lastMessage: 'Just sent over the design drafts. Let me know what you think.', time: 'Sunday', unread: 5 },
-  { id: '7', user: { name: 'Julian Voss', handle: 'jvoss', avatar_url: 'https://i.pravatar.cc/150?u=julian' }, lastMessage: 'Haha, I knew you would like it!', time: 'Oct 12', unread: 0 },
-  { id: '8', user: { name: 'Nina Simone', handle: 'nsimone', avatar_url: 'https://i.pravatar.cc/150?u=nina' }, lastMessage: 'Can you send me the address again?', time: 'Oct 10', unread: 0 }
+  { id: '1', user: { name: 'David Miller', handle: 'davidm', avatar_url: 'https://i.pravatar.cc/150?u=david' }, lastMessage: 'See you tomorrow at the cafe!', time: '10:30 AM', unread: 2, isOnline: true },
+  { id: '3', user: { name: 'Marcus Chen', handle: 'mchen', avatar_url: 'https://i.pravatar.cc/150?u=marcus' }, lastMessage: 'Do you have the link to that book?', time: '9:45 AM', unread: 1, isOnline: true },
+  { id: '4', user: { name: 'Chloe Bennett', handle: 'chloeb', avatar_url: 'https://i.pravatar.cc/150?u=chloe' }, lastMessage: 'I completely agree with your last post.', time: '8:15 AM', unread: 0, isOnline: true },
+  { id: '2', user: { name: 'Elena Rodriguez', handle: 'elena_r', avatar_url: 'https://i.pravatar.cc/150?u=elena' }, lastMessage: 'That photo you posted is amazing!', time: 'Yesterday', unread: 0, isOnline: false },
+  { id: '6', user: { name: 'Aria Stark', handle: 'astark', avatar_url: 'https://i.pravatar.cc/150?u=aria' }, lastMessage: 'Just sent over the drafts.', time: 'Sunday', unread: 5, isOnline: false },
+  { id: '5', user: { name: 'Lucas Thorne', handle: 'lthorne', avatar_url: 'https://i.pravatar.cc/150?u=lucas' }, lastMessage: 'Are we still on for the gallery?', time: 'Monday', unread: 0, isOnline: true },
+  { id: '7', user: { name: 'Julian Voss', handle: 'jvoss', avatar_url: 'https://i.pravatar.cc/150?u=julian' }, lastMessage: 'Haha, I knew you would like it!', time: 'Oct 12', unread: 0, isOnline: false },
+  { id: '8', user: { name: 'Nina Simone', handle: 'nsimone', avatar_url: 'https://i.pravatar.cc/150?u=nina' }, lastMessage: 'Can you send the address again?', time: 'Oct 10', unread: 0, isOnline: false }
 ];
 
 export default function MainApp() {
@@ -178,8 +178,14 @@ export default function MainApp() {
 
   const scrollTo = (index: number) => {
     scrollRef.current?.scrollTo({ x: index * SCREEN_WIDTH, animated: true });
-    setActiveIndex(index);
+    // Don't set activeIndex here, let onScroll handle it for perfect sync
   };
+
+  const indicatorTranslate = scrollX.interpolate({
+    inputRange: [0, SCREEN_WIDTH, SCREEN_WIDTH * 2],
+    outputRange: [0, (SCREEN_WIDTH - 40) / 3, ((SCREEN_WIDTH - 40) / 3) * 2],
+    extrapolate: 'clamp',
+  });
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
@@ -215,6 +221,7 @@ export default function MainApp() {
         <ProfileSection 
           colors={colors} 
           posts={MOCK_POSTS.slice(0, 2)}
+          router={router}
         />
       </Animated.ScrollView>
 
@@ -223,14 +230,22 @@ export default function MainApp() {
         backgroundColor: colorScheme === 'dark' ? 'rgba(28, 30, 33, 0.95)' : 'rgba(255, 255, 255, 0.95)',
         borderColor: colorScheme === 'dark' ? '#38444d' : '#e1e8ed',
       }]}>
+        <Animated.View style={[
+          styles.tabIndicator, 
+          { 
+            backgroundColor: colors.accent + '22',
+            width: (SCREEN_WIDTH - 40) / 3 - 20,
+            transform: [{ translateX: indicatorTranslate }] 
+          }
+        ]} />
         <TouchableOpacity style={styles.tabItem} onPress={() => scrollTo(0)}>
-          <Ionicons name={activeIndex === 0 ? "home" : "home-outline"} size={26} color={activeIndex === 0 ? colors.accent : colors.textSecondary} />
+          <Ionicons name={activeIndex === 0 ? "home" : "home-outline"} size={24} color={activeIndex === 0 ? colors.accent : colors.textSecondary} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.tabItem} onPress={() => scrollTo(1)}>
-          <Ionicons name={activeIndex === 1 ? "chatbubble" : "chatbubble-outline"} size={26} color={activeIndex === 1 ? colors.accent : colors.textSecondary} />
+          <Ionicons name={activeIndex === 1 ? "chatbubble" : "chatbubble-outline"} size={24} color={activeIndex === 1 ? colors.accent : colors.textSecondary} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.tabItem} onPress={() => scrollTo(2)}>
-          <Ionicons name={activeIndex === 2 ? "person" : "person-outline"} size={26} color={activeIndex === 2 ? colors.accent : colors.textSecondary} />
+          <Ionicons name={activeIndex === 2 ? "person" : "person-outline"} size={24} color={activeIndex === 2 ? colors.accent : colors.textSecondary} />
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -257,11 +272,19 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.1,
     shadowRadius: 10,
+    overflow: 'hidden',
+  },
+  tabIndicator: {
+    position: 'absolute',
+    height: 44,
+    borderRadius: 22,
+    left: 10,
   },
   tabItem: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     height: '100%',
+    zIndex: 2,
   },
 });

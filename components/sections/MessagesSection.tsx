@@ -254,21 +254,32 @@ export const MessagesSection = ({ colors, router, messages, blockedUsers, onPin,
 
       <FlatList
         data={filteredMessages}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.messageRow}
-            onPress={() => router.push(`/chat/${item.id}`)}
-            onLongPress={() => openOptions(item)}
-          >
-            <TouchableOpacity 
-              style={styles.messageAvatarContainer}
-              onPress={() => router.push(`/user/${item.user.handle}`)}
+        renderItem={({ item }) => {
+          const showBlueDot = item.unread > 0;
+          const showGreenDot = item.isOnline;
+          
+          return (
+            <TouchableOpacity
+              style={styles.messageRow}
+              onPress={() => router.push(`/chat/${item.id}`)}
+              onLongPress={() => openOptions(item)}
             >
-              <Avatar size={56} uri={item.user.avatar_url} />
-              {item.unread > 0 && (
-                <View style={[styles.unreadBadge, { backgroundColor: colors.accent }]} />
-              )}
-            </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.messageAvatarContainer}
+                onPress={() => router.push(`/user/${item.user.handle}`)}
+              >
+                <Avatar size={56} uri={item.user.avatar_url} />
+                {showGreenDot && !showBlueDot && (
+                  <View style={[styles.onlineBadge, { backgroundColor: '#4ade80' }]} />
+                )}
+                {showBlueDot && (
+                  <View style={[
+                    styles.unreadBadge, 
+                    { backgroundColor: colors.accent },
+                    showGreenDot && { borderColor: '#4ade80', borderWidth: 2 }
+                  ]} />
+                )}
+              </TouchableOpacity>
             <View style={styles.messageContent}>
               <View style={styles.messageHeader}>
                 <View style={styles.row}>
@@ -285,7 +296,8 @@ export const MessagesSection = ({ colors, router, messages, blockedUsers, onPin,
               </Text>
             </View>
           </TouchableOpacity>
-        )}
+        );
+      }}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingBottom: 120 }}
         showsVerticalScrollIndicator={false}
@@ -342,8 +354,18 @@ const styles = StyleSheet.create({
   },
   unreadBadge: {
     position: 'absolute',
-    top: 0,
-    right: 0,
+    top: 1,
+    right: 1,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: 2,
+    borderColor: '#000',
+  },
+  onlineBadge: {
+    position: 'absolute',
+    bottom: 1,
+    right: 1,
     width: 14,
     height: 14,
     borderRadius: 7,
