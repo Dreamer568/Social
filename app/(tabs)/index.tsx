@@ -1,30 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   View, 
-  Text, 
   StyleSheet, 
-  FlatList, 
-  TouchableOpacity, 
-  Platform,
   useColorScheme,
-  Dimensions,
-  ScrollView,
-  TextInput,
   Animated,
-  Image
+  ScrollView,
+  TouchableOpacity
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
 // Internal Components
-import { PostCard, PostProps } from '../../components/PostCard';
-import { SkeletonPost } from '../../components/SkeletonPost';
-import { SkeletonRow } from '../../components/SkeletonRow';
-import { Avatar } from '../../components/Avatar';
-import { Colors, Spacing, BorderRadius } from '../../constants/theme';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+import { PostProps } from '../../components/PostCard';
+import { Colors } from '../../constants/theme';
+import { HomeSection } from '../../components/sections/HomeSection';
+import { MessagesSection } from '../../components/sections/MessagesSection';
+import { ProfileSection } from '../../components/sections/ProfileSection';
+import { SCREEN_WIDTH } from '../../components/sections/constants';
 
 // --- MOCK DATA ---
 const MOCK_POSTS: PostProps[] = [
@@ -51,197 +44,119 @@ const MOCK_POSTS: PostProps[] = [
     created_at: '5h ago',
     likes: 256, comments: 45,
   },
+  {
+    id: '4',
+    user: { name: 'Marcus Chen', handle: 'mchen', avatar_url: 'https://i.pravatar.cc/150?u=marcus' },
+    content: 'Morning coffee and a blank notebook. My favorite way to start the day.',
+    media_url: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?q=80&w=1000&auto=format&fit=crop',
+    media_type: 'image',
+    created_at: '6h ago',
+    likes: 42, comments: 3,
+  },
+  {
+    id: '5',
+    user: { name: 'Chloe Bennett', handle: 'chloeb', avatar_url: 'https://i.pravatar.cc/150?u=chloe' },
+    content: 'Unpopular opinion: we don’t need more productivity hacks. We need more naps and long walks without our phones.',
+    created_at: '8h ago',
+    likes: 512, comments: 89,
+  },
+  {
+    id: '6',
+    user: { name: 'Jordan Taylor', handle: 'jtaylor', avatar_url: 'https://i.pravatar.cc/150?u=jordan' },
+    content: 'The lighting in the studio today was just perfect.',
+    media_url: 'https://images.unsplash.com/photo-1518131394553-8d960bf9830d?q=80&w=1000&auto=format&fit=crop',
+    media_type: 'image',
+    created_at: '12h ago',
+    likes: 15, comments: 1,
+  },
+  {
+    id: '7',
+    user: { name: 'Maya Patel', handle: 'mayap', avatar_url: 'https://i.pravatar.cc/150?u=maya' },
+    content: 'Finally finished reading "The Art of Slow Living". Highly recommend to anyone feeling the burnout.',
+    created_at: '1d ago',
+    likes: 93, comments: 14,
+  },
+  {
+    id: '8',
+    user: { name: 'Liam Wilson', handle: 'liamw', avatar_url: 'https://i.pravatar.cc/150?u=liam' },
+    content: 'Rainy days in the city have a soul of their own.',
+    media_url: 'https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?q=80&w=1000&auto=format&fit=crop',
+    media_type: 'image',
+    created_at: '1d ago',
+    likes: 210, comments: 22,
+  },
+  {
+    id: '9',
+    user: { name: 'Sophie Martin', handle: 'smartin', avatar_url: 'https://i.pravatar.cc/150?u=sophie' },
+    content: 'Deleting all my other social apps today. Let’s see how long this experiment lasts. ✌️',
+    created_at: '2d ago',
+    likes: 340, comments: 56,
+  },
+  {
+    id: '10',
+    user: { name: 'Daniel Kim', handle: 'dkim', avatar_url: 'https://i.pravatar.cc/150?u=daniel' },
+    content: 'Found this hidden gem of a bakery in the West End. The sourdough is life-changing.',
+    media_url: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?q=80&w=1000&auto=format&fit=crop',
+    media_type: 'image',
+    created_at: '3d ago',
+    likes: 77, comments: 9,
+  }
 ];
 
 const MOCK_MESSAGES = [
   { id: '1', user: { name: 'David Miller', handle: 'davidm', avatar_url: 'https://i.pravatar.cc/150?u=david' }, lastMessage: 'See you tomorrow at the cafe!', time: '10:30 AM', unread: 2 },
   { id: '2', user: { name: 'Elena Rodriguez', handle: 'elena_r', avatar_url: 'https://i.pravatar.cc/150?u=elena' }, lastMessage: 'That photo you posted is amazing!', time: 'Yesterday', unread: 0 },
+  { id: '3', user: { name: 'Marcus Chen', handle: 'mchen', avatar_url: 'https://i.pravatar.cc/150?u=marcus' }, lastMessage: 'Do you have the link to that book you mentioned?', time: '9:45 AM', unread: 1 },
+  { id: '4', user: { name: 'Chloe Bennett', handle: 'chloeb', avatar_url: 'https://i.pravatar.cc/150?u=chloe' }, lastMessage: 'I completely agree with your last post.', time: '8:15 AM', unread: 0 },
+  { id: '5', user: { name: 'Lucas Thorne', handle: 'lthorne', avatar_url: 'https://i.pravatar.cc/150?u=lucas' }, lastMessage: 'Are we still on for the gallery opening?', time: 'Monday', unread: 0 },
+  { id: '6', user: { name: 'Aria Stark', handle: 'astark', avatar_url: 'https://i.pravatar.cc/150?u=aria' }, lastMessage: 'Just sent over the design drafts. Let me know what you think.', time: 'Sunday', unread: 5 },
+  { id: '7', user: { name: 'Julian Voss', handle: 'jvoss', avatar_url: 'https://i.pravatar.cc/150?u=julian' }, lastMessage: 'Haha, I knew you would like it!', time: 'Oct 12', unread: 0 },
+  { id: '8', user: { name: 'Nina Simone', handle: 'nsimone', avatar_url: 'https://i.pravatar.cc/150?u=nina' }, lastMessage: 'Can you send me the address again?', time: 'Oct 10', unread: 0 }
 ];
-
-// --- SECTIONS ---
-
-const HomeSection = ({ loading, colors, router, feedType, setFeedType, colorScheme }: any) => {
-  const renderHeader = () => (
-    <View style={[styles.header, { backgroundColor: colors.background, borderBottomWidth: 0 }]}>
-      <TouchableOpacity 
-        style={[styles.circleButton, { backgroundColor: colors.surface, borderColor: colors.border }]} 
-        onPress={() => router.push('/search')}
-      >
-        <Ionicons name="search" size={22} color={colors.text} />
-      </TouchableOpacity>
-      
-      <View style={[styles.headerToggleContainer, { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }]}>
-        <TouchableOpacity 
-          style={[
-            styles.headerToggleButton, 
-            feedType === 'World' && { 
-              backgroundColor: colorScheme === 'dark' ? '#2F3336' : '#E1E8ED',
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.2,
-              shadowRadius: 4,
-              elevation: 3
-            }
-          ]}
-          onPress={() => setFeedType('World')}
-        >
-          <Text style={[styles.headerToggleText, { color: feedType === 'World' ? colors.text : colors.textSecondary }]}>World</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[
-            styles.headerToggleButton, 
-            feedType === 'Friends' && { 
-              backgroundColor: colorScheme === 'dark' ? '#2F3336' : '#E1E8ED',
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.2,
-              shadowRadius: 4,
-              elevation: 3
-            }
-          ]}
-          onPress={() => setFeedType('Friends')}
-        >
-          <Text style={[styles.headerToggleText, { color: feedType === 'Friends' ? colors.text : colors.textSecondary }]}>Friends</Text>
-        </TouchableOpacity>
-      </View>
-
-      <TouchableOpacity 
-        style={[styles.circleButton, { backgroundColor: colors.surface, borderColor: colors.border }]} 
-        onPress={() => router.push('/notifications')}
-      >
-        <Ionicons name="notifications-outline" size={22} color={colors.text} />
-      </TouchableOpacity>
-    </View>
-  );
-
-  return (
-    <View style={[styles.sectionContainer, { width: SCREEN_WIDTH }]}>
-      {renderHeader()}
-      {loading ? (
-        <FlatList
-          data={[1, 2, 3, 4]}
-          renderItem={() => <SkeletonPost />}
-          keyExtractor={(item) => item.toString()}
-          contentContainerStyle={{ paddingBottom: 120 }}
-        />
-      ) : (
-        <FlatList
-          data={MOCK_POSTS}
-          renderItem={({ item }) => <PostCard {...item} />}
-          keyExtractor={(item) => item.id}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 120 }}
-        />
-      )}
-    </View>
-  );
-};
-
-const MessagesSection = ({ colors, router }: any) => {
-  return (
-    <View style={[styles.sectionContainer, { width: SCREEN_WIDTH }]}>
-      <View style={[styles.header, { backgroundColor: colors.background, borderBottomWidth: 0 }]}>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Messages</Text>
-        <TouchableOpacity style={[styles.circleButton, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Ionicons name="settings-outline" size={20} color={colors.text} />
-        </TouchableOpacity>
-      </View>
-      
-      <View style={[styles.searchContainer, { backgroundColor: colors.surface }]}>
-        <Ionicons name="search" size={20} color={colors.textSecondary} />
-        <TextInput 
-          placeholder="Search direct messages" 
-          placeholderTextColor={colors.textSecondary}
-          style={[styles.searchInput, { color: colors.text }]}
-        />
-      </View>
-
-      <FlatList
-        data={MOCK_MESSAGES}
-        renderItem={({ item }) => (
-          <TouchableOpacity 
-            style={styles.messageRow}
-            onPress={() => router.push(`/chat/${item.id}`)}
-          >
-            <View style={styles.messageAvatarContainer}>
-              <Avatar size={56} uri={item.user.avatar_url} />
-              {item.unread > 0 && (
-                <View style={[styles.unreadBadge, { backgroundColor: colors.accent }]} />
-              )}
-            </View>
-            <View style={styles.messageContent}>
-              <View style={styles.messageHeader}>
-                <Text style={[styles.messageName, { color: colors.text }]}>{item.user.name}</Text>
-                <Text style={[styles.messageTime, { color: colors.textSecondary }]}>{item.time}</Text>
-              </View>
-              <Text 
-                style={[styles.messageText, { color: item.unread > 0 ? colors.text : colors.textSecondary, fontWeight: item.unread > 0 ? '700' : '400' }]} 
-                numberOfLines={1}
-              >
-                {item.lastMessage}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        )}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingBottom: 120 }}
-        showsVerticalScrollIndicator={false}
-      />
-    </View>
-  );
-};
-
-const ProfileSection = ({ colors }: any) => {
-  return (
-    <ScrollView style={[styles.sectionContainer, { width: SCREEN_WIDTH }]} contentContainerStyle={{ paddingBottom: 120 }}>
-      <View style={styles.profileCentered}>
-        <View style={styles.profileAvatarLarge}>
-          <Avatar size={100} uri="https://i.pravatar.cc/150?u=me" />
-        </View>
-        
-        <Text style={[styles.profileHandleLarge, { color: colors.text }]}>@yourhandle</Text>
-        <Text style={[styles.profileBioCentered, { color: colors.textSecondary }]}>
-          Human. Thinker. Explorer. 🌿{"\n"}Building Veritas for a better social web.
-        </Text>
-
-        <View style={styles.profileStatsRow}>
-          <View style={styles.profileStatItem}>
-            <Text style={[styles.profileStatValue, { color: colors.text }]}>1.2k</Text>
-            <Text style={[styles.profileStatLabel, { color: colors.textSecondary }]}>Followers</Text>
-          </View>
-          <View style={styles.profileStatItem}>
-            <Text style={[styles.profileStatValue, { color: colors.text }]}>420</Text>
-            <Text style={[styles.profileStatLabel, { color: colors.textSecondary }]}>Following</Text>
-          </View>
-        </View>
-
-        <TouchableOpacity style={[styles.profileEditButton, { borderColor: colors.border }]}>
-          <Text style={[styles.profileEditButtonText, { color: colors.text }]}>Edit Profile</Text>
-        </TouchableOpacity>
-      </View>
-      
-      <View style={[styles.profileSectionHeader, { borderTopColor: colors.border }]}>
-        <Text style={[styles.profileSectionTitle, { color: colors.text }]}>Posts</Text>
-      </View>
-      
-      {MOCK_POSTS.map(post => <PostCard key={post.id} {...post} />)}
-    </ScrollView>
-  );
-};
-
-// --- MAIN SCREEN ---
 
 export default function MainApp() {
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
   const [feedType, setFeedType] = useState('World');
+  const [messages, setMessages] = useState(MOCK_MESSAGES);
+  const [blockedUsers, setBlockedUsers] = useState<any[]>([]);
+  
   const router = useRouter();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'dark'];
   const scrollRef = useRef<ScrollView>(null);
   
-  // Animation value for tab indicator
   const scrollX = useRef(new Animated.Value(0)).current;
+
+  // Handlers for Messaging
+  const onPinChat = (id: string) => {
+    setMessages(prev => {
+      const msg = prev.find(m => m.id === id);
+      if (!msg) return prev;
+      const isPinned = (msg as any).isPinned;
+      return [
+        { ...msg, isPinned: !isPinned },
+        ...prev.filter(m => m.id !== id)
+      ].sort((a, b) => ((b as any).isPinned ? 1 : 0) - ((a as any).isPinned ? 1 : 0));
+    });
+  };
+
+  const onRenameChat = (id: string, newName: string) => {
+    setMessages(prev => prev.map(m => m.id === id ? { ...m, user: { ...m.user, name: newName } } : m));
+  };
+
+  const onBlockUser = (id: string) => {
+    const userToBlock = messages.find(m => m.id === id)?.user;
+    if (userToBlock) {
+      setBlockedUsers(prev => [...prev, { ...userToBlock, id }]);
+      setMessages(prev => prev.filter(m => m.id !== id));
+    }
+  };
+
+  const onUnblockUser = (id: string) => {
+    setBlockedUsers(prev => prev.filter(u => u.id !== id));
+    // Optionally add them back to messages or just keep them unblocked
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 2000);
@@ -250,10 +165,12 @@ export default function MainApp() {
 
   const onScroll = Animated.event(
     [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-    { useNativeDriver: false, listener: (event: any) => {
-      const index = Math.round(event.nativeEvent.contentOffset.x / SCREEN_WIDTH);
-      if (index !== activeIndex) setActiveIndex(index);
-    }}
+    {
+      useNativeDriver: false, listener: (event: any) => {
+        const index = Math.round(event.nativeEvent.contentOffset.x / SCREEN_WIDTH);
+        if (index !== activeIndex) setActiveIndex(index);
+      }
+    }
   );
 
   const scrollTo = (index: number) => {
@@ -279,11 +196,23 @@ export default function MainApp() {
           feedType={feedType} 
           setFeedType={setFeedType} 
           colorScheme={colorScheme}
+          posts={MOCK_POSTS}
         />
-        <MessagesSection colors={colors} router={router} />
-        <ProfileSection colors={colors} />
+        <MessagesSection 
+          colors={colors} 
+          router={router} 
+          messages={messages}
+          blockedUsers={blockedUsers}
+          onPin={onPinChat}
+          onRename={onRenameChat}
+          onBlock={onBlockUser}
+          onUnblock={onUnblockUser}
+        />
+        <ProfileSection 
+          colors={colors} 
+          posts={MOCK_POSTS.slice(0, 2)}
+        />
       </Animated.ScrollView>
-
 
       {/* CUSTOM FLOATING TAB BAR */}
       <View style={[styles.tabBar, { 
@@ -308,47 +237,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  sectionContainer: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
-    marginTop: Platform.OS === 'android' ? 10 : 0,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-  },
-  circleButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-  },
-  headerToggleContainer: {
-    flexDirection: 'row',
-    padding: 2,
-    borderRadius: 20,
-    width: 160,
-  },
-  headerToggleButton: {
-    flex: 1,
-    paddingVertical: 6,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerToggleText: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
   tabBar: {
     position: 'absolute',
     bottom: 30,
@@ -371,128 +259,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     height: '100%',
-  },
-  fab: {
-    position: 'absolute',
-    bottom: 110,
-    right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-  },
-  // Messages specific
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    margin: Spacing.lg,
-    paddingHorizontal: Spacing.md,
-    height: 44,
-    borderRadius: 22,
-  },
-  searchInput: {
-    flex: 1,
-    marginLeft: Spacing.sm,
-    fontSize: 16,
-  },
-  messageRow: {
-    flexDirection: 'row',
-    padding: Spacing.lg,
-    alignItems: 'center',
-  },
-  messageAvatarContainer: {
-    position: 'relative',
-  },
-  unreadBadge: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    borderWidth: 2,
-    borderColor: '#000',
-  },
-  messageContent: {
-    flex: 1,
-    marginLeft: Spacing.md,
-  },
-  messageHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 2,
-  },
-  messageName: {
-    fontWeight: '700',
-    fontSize: 16,
-  },
-  messageTime: {
-    fontSize: 13,
-  },
-  messageText: {
-    fontSize: 14,
-  },
-  // Profile Section Refined
-  profileCentered: {
-    alignItems: 'center',
-    paddingTop: Spacing.xxl,
-    paddingHorizontal: Spacing.xl,
-  },
-  profileAvatarLarge: {
-    marginBottom: Spacing.md,
-  },
-  profileHandleLarge: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: Spacing.sm,
-  },
-  profileBioCentered: {
-    fontSize: 15,
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: Spacing.lg,
-  },
-  profileStatsRow: {
-    flexDirection: 'row',
-    marginBottom: Spacing.xl,
-  },
-  profileStatItem: {
-    alignItems: 'center',
-    marginHorizontal: Spacing.lg,
-  },
-  profileStatValue: {
-    fontSize: 18,
-    fontWeight: '800',
-  },
-  profileStatLabel: {
-    fontSize: 12,
-    marginTop: 2,
-  },
-  profileEditButton: {
-    borderWidth: 1,
-    paddingHorizontal: Spacing.xxl,
-    paddingVertical: 8,
-    borderRadius: BorderRadius.full,
-    marginBottom: Spacing.xxl,
-  },
-  profileEditButtonText: {
-    fontWeight: '700',
-    fontSize: 14,
-  },
-  profileSectionHeader: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderTopWidth: 1,
-    marginTop: Spacing.md,
-  },
-  profileSectionTitle: {
-    fontSize: 18,
-    fontWeight: '800',
   },
 });
