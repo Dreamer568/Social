@@ -39,7 +39,8 @@ const MOCK_POSTS: PostProps[] = [
     id: '2',
     user: { name: 'Alex Smith', handle: 'asmith', avatar_url: 'https://i.pravatar.cc/150?u=alex' },
     content: 'Just finished a long hike. The silence of the mountains is something we should all experience more often.',
-    image_url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1000&auto=format&fit=crop',
+    media_url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1000&auto=format&fit=crop',
+    media_type: 'image',
     created_at: '4h ago',
     likes: 89, comments: 8,
   },
@@ -136,13 +137,13 @@ const HomeSection = ({ loading, colors, router, feedType, setFeedType, colorSche
   );
 };
 
-const MessagesSection = ({ colors }: any) => {
+const MessagesSection = ({ colors, router }: any) => {
   return (
     <View style={[styles.sectionContainer, { width: SCREEN_WIDTH }]}>
-      <View style={[styles.header, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.background, borderBottomWidth: 0 }]}>
         <Text style={[styles.headerTitle, { color: colors.text }]}>Messages</Text>
-        <TouchableOpacity>
-          <Ionicons name="settings-outline" size={24} color={colors.text} />
+        <TouchableOpacity style={[styles.circleButton, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Ionicons name="settings-outline" size={20} color={colors.text} />
         </TouchableOpacity>
       </View>
       
@@ -158,19 +159,33 @@ const MessagesSection = ({ colors }: any) => {
       <FlatList
         data={MOCK_MESSAGES}
         renderItem={({ item }) => (
-          <TouchableOpacity style={styles.messageRow}>
-            <Avatar size={50} uri={item.user.avatar_url} />
+          <TouchableOpacity 
+            style={styles.messageRow}
+            onPress={() => router.push(`/chat/${item.id}`)}
+          >
+            <View style={styles.messageAvatarContainer}>
+              <Avatar size={56} uri={item.user.avatar_url} />
+              {item.unread > 0 && (
+                <View style={[styles.unreadBadge, { backgroundColor: colors.accent }]} />
+              )}
+            </View>
             <View style={styles.messageContent}>
               <View style={styles.messageHeader}>
                 <Text style={[styles.messageName, { color: colors.text }]}>{item.user.name}</Text>
                 <Text style={[styles.messageTime, { color: colors.textSecondary }]}>{item.time}</Text>
               </View>
-              <Text style={[styles.messageText, { color: colors.textSecondary }]} numberOfLines={1}>{item.lastMessage}</Text>
+              <Text 
+                style={[styles.messageText, { color: item.unread > 0 ? colors.text : colors.textSecondary, fontWeight: item.unread > 0 ? '700' : '400' }]} 
+                numberOfLines={1}
+              >
+                {item.lastMessage}
+              </Text>
             </View>
           </TouchableOpacity>
         )}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingBottom: 120 }}
+        showsVerticalScrollIndicator={false}
       />
     </View>
   );
@@ -265,7 +280,7 @@ export default function MainApp() {
           setFeedType={setFeedType} 
           colorScheme={colorScheme}
         />
-        <MessagesSection colors={colors} />
+        <MessagesSection colors={colors} router={router} />
         <ProfileSection colors={colors} />
       </Animated.ScrollView>
 
@@ -390,6 +405,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: Spacing.lg,
     alignItems: 'center',
+  },
+  messageAvatarContainer: {
+    position: 'relative',
+  },
+  unreadBadge: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: 2,
+    borderColor: '#000',
   },
   messageContent: {
     flex: 1,
