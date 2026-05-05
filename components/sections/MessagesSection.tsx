@@ -20,7 +20,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-export const MessagesSection = ({ colors, router, messages, blockedUsers, onPin, onRename, onBlock, onUnblock, onDelete }: any) => {
+export const MessagesSection = ({ colors, router, messages, blockedUsers, onPin, onRename, onBlock, onUnblock, onDelete, onChatPress }: any) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedChat, setSelectedChat] = useState<any>(null);
   
@@ -261,7 +261,7 @@ export const MessagesSection = ({ colors, router, messages, blockedUsers, onPin,
           return (
             <TouchableOpacity
               style={styles.messageRow}
-              onPress={() => router.push(`/chat/${item.id}`)}
+              onPress={() => onChatPress(item)}
               onLongPress={() => openOptions(item)}
             >
               <TouchableOpacity 

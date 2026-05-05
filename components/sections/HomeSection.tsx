@@ -6,12 +6,12 @@ import { SkeletonPost } from '../../components/SkeletonPost';
 import { Spacing } from '../../constants/theme';
 import { SCREEN_WIDTH } from './constants';
 
-export const HomeSection = ({ loading, colors, router, feedType, setFeedType, colorScheme, posts }: any) => {
+export const HomeSection = ({ loading, colors, router, feedType, setFeedType, colorScheme, posts, onNotificationPress, onSearchPress }: any) => {
   const renderHeader = () => (
     <View style={[styles.header, { backgroundColor: colors.background, borderBottomWidth: 0 }]}>
       <TouchableOpacity 
         style={[styles.circleButton, { backgroundColor: colors.surface, borderColor: colors.border }]} 
-        onPress={() => router.push('/search')}
+        onPress={onSearchPress}
       >
         <Ionicons name="search" size={22} color={colors.text} />
       </TouchableOpacity>
@@ -53,7 +53,7 @@ export const HomeSection = ({ loading, colors, router, feedType, setFeedType, co
 
       <TouchableOpacity 
         style={[styles.circleButton, { backgroundColor: colors.surface, borderColor: colors.border }]} 
-        onPress={() => router.push('/notifications')}
+        onPress={onNotificationPress}
       >
         <Ionicons name="notifications-outline" size={22} color={colors.text} />
       </TouchableOpacity>

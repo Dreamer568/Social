@@ -19,88 +19,24 @@ import { MessagesSection } from '../../components/sections/MessagesSection';
 import { ProfileSection } from '../../components/sections/ProfileSection';
 import { SCREEN_WIDTH } from '../../components/sections/constants';
 
+// Overlays
+import { ChatOverlay } from '../../components/ChatOverlay';
+import { NotificationsOverlay } from '../../components/NotificationsOverlay';
+import { EditProfileOverlay } from '../../components/EditProfileOverlay';
+import { SearchOverlay } from '../../components/SearchOverlay';
+
 // --- MOCK DATA ---
 const MOCK_POSTS: PostProps[] = [
-  {
-    id: '1',
-    user: { name: 'Jane Doe', handle: 'janedoe', avatar_url: 'https://i.pravatar.cc/150?u=jane' },
-    content: 'This app feels so refreshingly human. No algorithms, no AI noise. Just pure expression. Love it! 🌿',
-    created_at: '2h ago',
-    likes: 124, comments: 12,
-  },
-  {
-    id: '2',
-    user: { name: 'Alex Smith', handle: 'asmith', avatar_url: 'https://i.pravatar.cc/150?u=alex' },
-    content: 'Just finished a long hike. The silence of the mountains is something we should all experience more often.',
-    media_url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1000&auto=format&fit=crop',
-    media_type: 'image',
-    created_at: '4h ago',
-    likes: 89, comments: 8,
-  },
-  {
-    id: '3',
-    user: { name: 'Sarah Connor', handle: 'sconnor', avatar_url: 'https://i.pravatar.cc/150?u=sarah' },
-    content: 'Authenticity is the new luxury.',
-    created_at: '5h ago',
-    likes: 256, comments: 45,
-  },
-  {
-    id: '4',
-    user: { name: 'Marcus Chen', handle: 'mchen', avatar_url: 'https://i.pravatar.cc/150?u=marcus' },
-    content: 'Morning coffee and a blank notebook. My favorite way to start the day.',
-    media_url: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?q=80&w=1000&auto=format&fit=crop',
-    media_type: 'image',
-    created_at: '6h ago',
-    likes: 42, comments: 3,
-  },
-  {
-    id: '5',
-    user: { name: 'Chloe Bennett', handle: 'chloeb', avatar_url: 'https://i.pravatar.cc/150?u=chloe' },
-    content: 'Unpopular opinion: we don’t need more productivity hacks. We need more naps and long walks without our phones.',
-    created_at: '8h ago',
-    likes: 512, comments: 89,
-  },
-  {
-    id: '6',
-    user: { name: 'Jordan Taylor', handle: 'jtaylor', avatar_url: 'https://i.pravatar.cc/150?u=jordan' },
-    content: 'The lighting in the studio today was just perfect.',
-    media_url: 'https://images.unsplash.com/photo-1518131394553-8d960bf9830d?q=80&w=1000&auto=format&fit=crop',
-    media_type: 'image',
-    created_at: '12h ago',
-    likes: 15, comments: 1,
-  },
-  {
-    id: '7',
-    user: { name: 'Maya Patel', handle: 'mayap', avatar_url: 'https://i.pravatar.cc/150?u=maya' },
-    content: 'Finally finished reading "The Art of Slow Living". Highly recommend to anyone feeling the burnout.',
-    created_at: '1d ago',
-    likes: 93, comments: 14,
-  },
-  {
-    id: '8',
-    user: { name: 'Liam Wilson', handle: 'liamw', avatar_url: 'https://i.pravatar.cc/150?u=liam' },
-    content: 'Rainy days in the city have a soul of their own.',
-    media_url: 'https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?q=80&w=1000&auto=format&fit=crop',
-    media_type: 'image',
-    created_at: '1d ago',
-    likes: 210, comments: 22,
-  },
-  {
-    id: '9',
-    user: { name: 'Sophie Martin', handle: 'smartin', avatar_url: 'https://i.pravatar.cc/150?u=sophie' },
-    content: 'Deleting all my other social apps today. Let’s see how long this experiment lasts. ✌️',
-    created_at: '2d ago',
-    likes: 340, comments: 56,
-  },
-  {
-    id: '10',
-    user: { name: 'Daniel Kim', handle: 'dkim', avatar_url: 'https://i.pravatar.cc/150?u=daniel' },
-    content: 'Found this hidden gem of a bakery in the West End. The sourdough is life-changing.',
-    media_url: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?q=80&w=1000&auto=format&fit=crop',
-    media_type: 'image',
-    created_at: '3d ago',
-    likes: 77, comments: 9,
-  }
+  { id: '1', user: { name: 'Jane Doe', handle: 'janedoe', avatar_url: 'https://i.pravatar.cc/150?u=jane' }, content: 'This app feels so refreshingly human. No algorithms, no AI noise. Just pure expression. Love it! 🌿', created_at: '2h ago', likes: 124, comments: 12 },
+  { id: '2', user: { name: 'Alex Smith', handle: 'asmith', avatar_url: 'https://i.pravatar.cc/150?u=alex' }, content: 'Just finished a long hike. The silence of the mountains is something we should all experience more often.', media_url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1000&auto=format&fit=crop', media_type: 'image', created_at: '4h ago', likes: 89, comments: 8 },
+  { id: '3', user: { name: 'Sarah Connor', handle: 'sconnor', avatar_url: 'https://i.pravatar.cc/150?u=sarah' }, content: 'Authenticity is the new luxury.', created_at: '5h ago', likes: 256, comments: 45 },
+  { id: '4', user: { name: 'Marcus Chen', handle: 'mchen', avatar_url: 'https://i.pravatar.cc/150?u=marcus' }, content: 'Morning coffee and a blank notebook. My favorite way to start the day.', media_url: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?q=80&w=1000&auto=format&fit=crop', media_type: 'image', created_at: '6h ago', likes: 42, comments: 3 },
+  { id: '5', user: { name: 'Chloe Bennett', handle: 'chloeb', avatar_url: 'https://i.pravatar.cc/150?u=chloe' }, content: 'Unpopular opinion: we don’t need more productivity hacks. We need more naps and long walks without our phones.', created_at: '8h ago', likes: 512, comments: 89 },
+  { id: '6', user: { name: 'Jordan Taylor', handle: 'jtaylor', avatar_url: 'https://i.pravatar.cc/150?u=jordan' }, content: 'The lighting in the studio today was just perfect.', media_url: 'https://images.unsplash.com/photo-1518131394553-8d960bf9830d?q=80&w=1000&auto=format&fit=crop', media_type: 'image', created_at: '12h ago', likes: 15, comments: 1 },
+  { id: '7', user: { name: 'Maya Patel', handle: 'mayap', avatar_url: 'https://i.pravatar.cc/150?u=maya' }, content: 'Finally finished reading "The Art of Slow Living". Highly recommend to anyone feeling the burnout.', created_at: '1d ago', likes: 93, comments: 14 },
+  { id: '8', user: { name: 'Liam Wilson', handle: 'liamw', avatar_url: 'https://i.pravatar.cc/150?u=liam' }, content: 'Rainy days in the city have a soul of their own.', media_url: 'https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?q=80&w=1000&auto=format&fit=crop', media_type: 'image', created_at: '1d ago', likes: 210, comments: 22 },
+  { id: '9', user: { name: 'Sophie Martin', handle: 'smartin', avatar_url: 'https://i.pravatar.cc/150?u=sophie' }, content: 'Deleting all my other social apps today. Let’s see how long this experiment lasts. ✌️', created_at: '2d ago', likes: 340, comments: 56 },
+  { id: '10', user: { name: 'Daniel Kim', handle: 'dkim', avatar_url: 'https://i.pravatar.cc/150?u=daniel' }, content: 'Found this hidden gem of a bakery in the West End. The sourdough is life-changing.', media_url: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?q=80&w=1000&auto=format&fit=crop', media_type: 'image', created_at: '3d ago', likes: 77, comments: 9 }
 ];
 
 const MOCK_MESSAGES = [
@@ -121,11 +57,16 @@ export default function MainApp() {
   const [messages, setMessages] = useState(MOCK_MESSAGES);
   const [blockedUsers, setBlockedUsers] = useState<any[]>([]);
   
+  // Overlay States
+  const [openChatUser, setOpenChatUser] = useState<any>(null);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showEditProfile, setShowEditProfile] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+
   const router = useRouter();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'dark'];
   const scrollRef = useRef<ScrollView>(null);
-  
   const scrollX = useRef(new Animated.Value(0)).current;
 
   // Handlers for Messaging
@@ -148,7 +89,7 @@ export default function MainApp() {
   const onBlockUser = (id: string) => {
     const userToBlock = messages.find(m => m.id === id)?.user;
     if (userToBlock) {
-      setBlockedUsers(prev => [...prev, { ...userToBlock, id }]);
+      setBlockedUsers(prev => [...prev, { id, ...userToBlock }]);
       setMessages(prev => prev.filter(m => m.id !== id));
     }
   };
@@ -178,7 +119,6 @@ export default function MainApp() {
 
   const scrollTo = (index: number) => {
     scrollRef.current?.scrollTo({ x: index * SCREEN_WIDTH, animated: true });
-    // Don't set activeIndex here, let onScroll handle it for perfect sync
   };
 
   const indicatorTranslate = scrollX.interpolate({
@@ -206,6 +146,8 @@ export default function MainApp() {
           setFeedType={setFeedType} 
           colorScheme={colorScheme}
           posts={MOCK_POSTS}
+          onNotificationPress={() => setShowNotifications(true)}
+          onSearchPress={() => setShowSearch(true)}
         />
         <MessagesSection 
           colors={colors} 
@@ -217,11 +159,13 @@ export default function MainApp() {
           onBlock={onBlockUser}
           onUnblock={onUnblockUser}
           onDelete={onDeleteChat}
+          onChatPress={(chat: any) => setOpenChatUser(chat.user)}
         />
         <ProfileSection 
           colors={colors} 
           posts={MOCK_POSTS.slice(0, 2)}
           router={router}
+          onEditPress={() => setShowEditProfile(true)}
         />
       </Animated.ScrollView>
 
@@ -248,14 +192,33 @@ export default function MainApp() {
           <Ionicons name={activeIndex === 2 ? "person" : "person-outline"} size={24} color={activeIndex === 2 ? colors.accent : colors.textSecondary} />
         </TouchableOpacity>
       </View>
+
+      {/* OVERLAYS (No Navigation flicker) */}
+      {showNotifications && (
+        <NotificationsOverlay onClose={() => setShowNotifications(false)} />
+      )}
+      {openChatUser && (
+        <ChatOverlay 
+          user={openChatUser} 
+          onClose={() => setOpenChatUser(null)} 
+          onProfilePress={(handle: string) => {
+            setOpenChatUser(null);
+            router.push(`/user/${handle}` as any);
+          }}
+        />
+      )}
+      {showEditProfile && (
+        <EditProfileOverlay onClose={() => setShowEditProfile(false)} />
+      )}
+      {showSearch && (
+        <SearchOverlay onClose={() => setShowSearch(false)} />
+      )}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   tabBar: {
     position: 'absolute',
     bottom: 30,
@@ -274,17 +237,6 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     overflow: 'hidden',
   },
-  tabIndicator: {
-    position: 'absolute',
-    height: 44,
-    borderRadius: 22,
-    left: 10,
-  },
-  tabItem: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: '100%',
-    zIndex: 2,
-  },
+  tabIndicator: { position: 'absolute', height: 44, borderRadius: 22, left: 10 },
+  tabItem: { flex: 1, alignItems: 'center', justifyContent: 'center', height: '100%', zIndex: 2 },
 });

@@ -21,15 +21,35 @@ export default function RootLayout() {
         <Stack.Screen 
           name="notifications" 
           options={{ 
-            title: 'Notifications',
-            headerBackTitle: 'Back',
+            presentation: 'modal',
+            headerShown: false,
+          }} 
+        />
+        <Stack.Screen 
+          name="chat/[id]" 
+          options={{ 
+            presentation: 'modal',
+            headerShown: false,
+          }} 
+        />
+        <Stack.Screen 
+          name="user/[id]" 
+          options={{ 
+            presentation: 'modal',
+            headerShown: false,
+          }} 
+        />
+        <Stack.Screen 
+          name="edit-profile" 
+          options={{ 
+            presentation: 'modal',
+            headerShown: false,
           }} 
         />
         <Stack.Screen 
           name="new-post" 
           options={{ 
             presentation: 'modal',
-            title: 'New Post',
             headerShown: false,
           }} 
         />

@@ -5,7 +5,7 @@ import { PostCard } from '../PostCard';
 import { Spacing, BorderRadius } from '../../constants/theme';
 import { SCREEN_WIDTH } from './constants';
 
-export const ProfileSection = ({ colors, posts, router }: any) => {
+export const ProfileSection = ({ colors, posts, router, onEditPress }: any) => {
   return (
     <ScrollView style={[styles.sectionContainer, { width: SCREEN_WIDTH }]} contentContainerStyle={{ paddingBottom: 120 }}>
       <View style={styles.profileCentered}>
@@ -32,7 +32,7 @@ export const ProfileSection = ({ colors, posts, router }: any) => {
 
         <TouchableOpacity 
           style={[styles.profileEditButton, { borderColor: colors.border }]}
-          onPress={() => router.push('/edit-profile')}
+          onPress={onEditPress}
         >
           <Text style={[styles.profileEditButtonText, { color: colors.text }]}>Edit Profile</Text>
         </TouchableOpacity>

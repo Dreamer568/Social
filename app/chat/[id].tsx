@@ -80,18 +80,23 @@ export default function ChatScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <Stack.Screen options={{ headerShown: false }} />
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={28} color={colors.text} />
+          <Ionicons name="chevron-down" size={28} color={colors.text} />
         </TouchableOpacity>
-        <Avatar size={36} uri="https://i.pravatar.cc/150?u=other" />
-        <View style={styles.headerInfo}>
+        <TouchableOpacity onPress={() => router.push(`/user/${id || 'other'}` as any)}>
+          <Avatar size={36} uri="https://i.pravatar.cc/150?u=other" />
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.headerInfo}
+          onPress={() => router.push(`/user/${id || 'other'}` as any)}
+        >
           <Text style={[styles.headerName, { color: colors.text }]}>David Miller</Text>
           <Text style={[styles.headerStatus, { color: colors.accent }]}>Online</Text>
-        </View>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.headerAction}>
           <Ionicons name="call-outline" size={22} color={colors.text} />
         </TouchableOpacity>
