@@ -155,7 +155,10 @@ export default function MainApp() {
 
   const onUnblockUser = (id: string) => {
     setBlockedUsers(prev => prev.filter(u => u.id !== id));
-    // Optionally add them back to messages or just keep them unblocked
+  };
+
+  const onDeleteChat = (id: string) => {
+    setMessages(prev => prev.filter(m => m.id !== id));
   };
 
   useEffect(() => {
@@ -207,6 +210,7 @@ export default function MainApp() {
           onRename={onRenameChat}
           onBlock={onBlockUser}
           onUnblock={onUnblockUser}
+          onDelete={onDeleteChat}
         />
         <ProfileSection 
           colors={colors} 

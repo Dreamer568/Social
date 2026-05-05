@@ -16,14 +16,14 @@ import {
 import { Avatar } from '../Avatar';
 import { Spacing, BorderRadius } from '../../constants/theme';
 import { SCREEN_WIDTH } from './constants';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-export const MessagesSection = ({ colors, router, messages, blockedUsers, onPin, onRename, onBlock, onUnblock }: any) => {
+export const MessagesSection = ({ colors, router, messages, blockedUsers, onPin, onRename, onBlock, onUnblock, onDelete }: any) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedChat, setSelectedChat] = useState<any>(null);
   
-  // Modals visibility
   const [isOptionsVisible, setIsOptionsVisible] = useState(false);
   const [isSettingsVisible, setIsSettingsVisible] = useState(false);
   const [isRenameVisible, setIsRenameVisible] = useState(false);
@@ -66,7 +66,7 @@ export const MessagesSection = ({ colors, router, messages, blockedUsers, onPin,
           </Text>
           
           <TouchableOpacity 
-            style={styles.actionItem} 
+            style={[styles.actionItem, { backgroundColor: colors.background + '88', borderRadius: 16 }]} 
             onPress={() => {
               if (selectedChat) {
                 onPin(selectedChat.id);
@@ -74,19 +74,26 @@ export const MessagesSection = ({ colors, router, messages, blockedUsers, onPin,
               }
             }}
           >
-            <Ionicons name="pin" size={20} color={colors.text} />
+            <View style={[styles.actionIconContainer, { backgroundColor: colors.accent + '22' }]}>
+              <Ionicons name="pin" size={20} color={colors.accent} />
+            </View>
             <Text style={[styles.actionText, { color: colors.text }]}>
               {selectedChat?.isPinned ? 'Unpin Chat' : 'Pin to Top'}
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.actionItem} onPress={() => setIsRenameVisible(true)}>
-            <Ionicons name="pencil" size={20} color={colors.text} />
+          <TouchableOpacity 
+            style={[styles.actionItem, { backgroundColor: colors.background + '88', borderRadius: 16, marginTop: 12 }]} 
+            onPress={() => setIsRenameVisible(true)}
+          >
+            <View style={[styles.actionIconContainer, { backgroundColor: colors.text + '11' }]}>
+              <Ionicons name="pencil" size={20} color={colors.text} />
+            </View>
             <Text style={[styles.actionText, { color: colors.text }]}>Rename</Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
-            style={styles.actionItem} 
+            style={[styles.actionItem, { backgroundColor: colors.background + '88', borderRadius: 16, marginTop: 12 }]} 
             onPress={() => {
               if (selectedChat) {
                 onBlock(selectedChat.id);
@@ -94,13 +101,29 @@ export const MessagesSection = ({ colors, router, messages, blockedUsers, onPin,
               }
             }}
           >
-            <Ionicons name="ban" size={20} color={colors.error} />
+            <View style={[styles.actionIconContainer, { backgroundColor: colors.error + '22' }]}>
+              <Ionicons name="ban" size={20} color={colors.error} />
+            </View>
             <Text style={[styles.actionText, { color: colors.error }]}>Block User</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.actionItem, { backgroundColor: colors.background + '88', borderRadius: 16, marginTop: 12 }]} 
+            onPress={() => {
+              if (selectedChat) {
+                onDelete(selectedChat.id);
+                setIsOptionsVisible(false);
+              }
+            }}
+          >
+            <View style={[styles.actionIconContainer, { backgroundColor: colors.error + '11' }]}>
+              <Ionicons name="trash-outline" size={20} color={colors.error} />
+            </View>
+            <Text style={[styles.actionText, { color: colors.error }]}>Delete Chat</Text>
           </TouchableOpacity>
         </View>
       </Pressable>
 
-      {/* Nested Rename Modal */}
       <Modal visible={isRenameVisible} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={[styles.dialog, { backgroundColor: colors.surface }]}>
@@ -129,53 +152,78 @@ export const MessagesSection = ({ colors, router, messages, blockedUsers, onPin,
     <Modal visible={isSettingsVisible} animationType="slide">
       <SafeAreaView style={[styles.fullModal, { backgroundColor: colors.background }]}>
         <View style={styles.modalHeader}>
-          <TouchableOpacity onPress={() => setIsSettingsVisible(false)}>
-            <Ionicons name="close" size={28} color={colors.text} />
+          <TouchableOpacity onPress={() => setIsSettingsVisible(false)} style={styles.closeButton}>
+            <Ionicons name="chevron-down" size={28} color={colors.text} />
           </TouchableOpacity>
-          <Text style={[styles.modalTitle, { color: colors.text }]}>Message Settings</Text>
-          <View style={{ width: 28 }} />
+          <Text style={[styles.modalTitle, { color: colors.text }]}>Settings</Text>
+          <View style={{ width: 44 }} />
         </View>
 
-        <ScrollView style={styles.flex}>
-          <TouchableOpacity style={styles.settingsItem} onPress={() => setIsBlockedListVisible(!isBlockedListVisible)}>
-            <View style={styles.settingsItemMain}>
-              <Ionicons name="ban-outline" size={24} color={colors.text} />
-              <Text style={[styles.settingsItemText, { color: colors.text }]}>Blocked Users</Text>
-            </View>
-            <Ionicons name={isBlockedListVisible ? "chevron-up" : "chevron-down"} size={20} color={colors.textSecondary} />
-          </TouchableOpacity>
+        <ScrollView style={styles.flex} contentContainerStyle={{ padding: Spacing.lg }}>
+          <View style={[styles.settingsCard, { backgroundColor: colors.surface }]}>
+            <TouchableOpacity 
+              style={styles.settingsItem} 
+              onPress={() => setIsBlockedListVisible(!isBlockedListVisible)}
+            >
+              <View style={styles.settingsItemMain}>
+                <View style={[styles.settingsIcon, { backgroundColor: colors.error + '15' }]}>
+                  <Ionicons name="ban-outline" size={22} color={colors.error} />
+                </View>
+                <Text style={[styles.settingsItemText, { color: colors.text }]}>Blocked Users</Text>
+              </View>
+              <Ionicons 
+                name={isBlockedListVisible ? "chevron-up" : "chevron-forward"} 
+                size={20} 
+                color={colors.textSecondary} 
+              />
+            </TouchableOpacity>
 
-          {isBlockedListVisible && (
-            <View style={[styles.blockedList, { backgroundColor: colors.surface }]}>
-              {blockedUsers.length === 0 ? (
-                <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No blocked users</Text>
-              ) : (
-                blockedUsers.map((user: any) => (
-                  <View key={user.id} style={styles.blockedUserRow}>
-                    <Avatar size={40} uri={user.avatar_url} />
-                    <Text style={[styles.blockedUserName, { color: colors.text }]}>{user.name}</Text>
-                    <TouchableOpacity onPress={() => onUnblock(user.id)}>
-                      <Text style={{ color: colors.accent, fontWeight: '600' }}>Unblock</Text>
-                    </TouchableOpacity>
-                  </View>
-                ))
-              )}
-            </View>
-          )}
+            {isBlockedListVisible && (
+              <View style={styles.blockedListContainer}>
+                {blockedUsers.length === 0 ? (
+                  <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No blocked users yet</Text>
+                ) : (
+                  blockedUsers.map((user: any) => (
+                    <View key={user.id} style={styles.blockedUserRow}>
+                      <Avatar size={44} uri={user.avatar_url} />
+                      <View style={styles.blockedUserInfo}>
+                        <Text style={[styles.blockedUserName, { color: colors.text }]}>{user.name}</Text>
+                        <Text style={[styles.blockedUserHandle, { color: colors.textSecondary }]}>@{user.handle || user.name.toLowerCase().replace(' ', '')}</Text>
+                      </View>
+                      <TouchableOpacity 
+                        style={[styles.unblockButton, { backgroundColor: colors.accent + '22' }]} 
+                        onPress={() => onUnblock(user.id)}
+                      >
+                        <Text style={[styles.unblockText, { color: colors.accent }]}>Unblock</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))
+                )}
+              </View>
+            )}
+          </View>
 
-          <TouchableOpacity style={styles.settingsItem}>
-            <View style={styles.settingsItemMain}>
-              <Ionicons name="notifications-outline" size={24} color={colors.text} />
-              <Text style={[styles.settingsItemText, { color: colors.text }]}>Notifications</Text>
-            </View>
-          </TouchableOpacity>
+          <View style={[styles.settingsCard, { backgroundColor: colors.surface, marginTop: Spacing.lg }]}>
+            <TouchableOpacity style={styles.settingsItem}>
+              <View style={styles.settingsItemMain}>
+                <View style={[styles.settingsIcon, { backgroundColor: colors.accent + '15' }]}>
+                  <Ionicons name="notifications-outline" size={22} color={colors.accent} />
+                </View>
+                <Text style={[styles.settingsItemText, { color: colors.text }]}>Notifications</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+            </TouchableOpacity>
 
-          <TouchableOpacity style={styles.settingsItem}>
-            <View style={styles.settingsItemMain}>
-              <Ionicons name="trash-outline" size={24} color={colors.error} />
-              <Text style={[styles.settingsItemText, { color: colors.error }]}>Clear all chats</Text>
-            </View>
-          </TouchableOpacity>
+            <TouchableOpacity style={[styles.settingsItem, { borderTopWidth: 1, borderTopColor: colors.border + '33' }]}>
+              <View style={styles.settingsItemMain}>
+                <View style={[styles.settingsIcon, { backgroundColor: '#6366f115' }]}>
+                  <Ionicons name="lock-closed-outline" size={22} color="#6366f1" />
+                </View>
+                <Text style={[styles.settingsItemText, { color: colors.text }]}>Privacy & Security</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
         </ScrollView>
       </SafeAreaView>
     </Modal>
@@ -212,12 +260,15 @@ export const MessagesSection = ({ colors, router, messages, blockedUsers, onPin,
             onPress={() => router.push(`/chat/${item.id}`)}
             onLongPress={() => openOptions(item)}
           >
-            <View style={styles.messageAvatarContainer}>
+            <TouchableOpacity 
+              style={styles.messageAvatarContainer}
+              onPress={() => router.push(`/user/${item.user.handle}`)}
+            >
               <Avatar size={56} uri={item.user.avatar_url} />
               {item.unread > 0 && (
                 <View style={[styles.unreadBadge, { backgroundColor: colors.accent }]} />
               )}
-            </View>
+            </TouchableOpacity>
             <View style={styles.messageContent}>
               <View style={styles.messageHeader}>
                 <View style={styles.row}>
@@ -319,7 +370,7 @@ const styles = StyleSheet.create({
   messageText: {
     fontSize: 14,
   },
-  // Custom Action Sheet UI
+  // Custom UI elements
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -327,16 +378,16 @@ const styles = StyleSheet.create({
   },
   actionSheet: {
     padding: Spacing.xl,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingBottom: 40,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    paddingBottom: 50,
   },
   indicator: {
     width: 40,
     height: 4,
     borderRadius: 2,
     alignSelf: 'center',
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.xl,
   },
   actionSheetTitle: {
     textAlign: 'center',
@@ -344,44 +395,50 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xl,
     fontWeight: '600',
   },
+  actionIconContainer: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   actionItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: Spacing.lg,
+    padding: Spacing.md,
   },
   actionText: {
     marginLeft: Spacing.lg,
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: 17,
+    fontWeight: '600',
   },
-  // Dialog/Rename UI
   dialog: {
-    marginHorizontal: 40,
-    borderRadius: 20,
+    marginHorizontal: 30,
+    borderRadius: 28,
     padding: Spacing.xl,
-    marginTop: -200, // Center roughly
+    marginTop: -200,
   },
   dialogTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '800',
     marginBottom: Spacing.lg,
+    textAlign: 'center',
   },
   dialogInput: {
-    borderRadius: 10,
-    padding: Spacing.md,
+    borderRadius: 16,
+    padding: Spacing.lg,
     borderWidth: 1,
-    fontSize: 16,
+    fontSize: 17,
     marginBottom: Spacing.xl,
   },
   dialogButtons: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
   },
   dialogButton: {
-    marginLeft: Spacing.xl,
-    fontSize: 16,
+    paddingHorizontal: Spacing.xl,
+    fontSize: 17,
   },
-  // Settings Full Screen Modal
   fullModal: {
     flex: 1,
   },
@@ -390,16 +447,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: Spacing.lg,
+    paddingBottom: Spacing.md,
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '800',
+  },
+  settingsCard: {
+    borderRadius: 28,
+    overflow: 'hidden',
+    paddingVertical: 4,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+  },
+  settingsIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   settingsItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: Spacing.xl,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.lg,
   },
   settingsItemMain: {
     flexDirection: 'row',
@@ -407,27 +483,50 @@ const styles = StyleSheet.create({
   },
   settingsItemText: {
     marginLeft: Spacing.lg,
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: 17,
+    fontWeight: '600',
   },
-  blockedList: {
-    marginHorizontal: Spacing.lg,
-    borderRadius: 16,
-    padding: Spacing.md,
-  },
-  emptyText: {
-    textAlign: 'center',
-    padding: Spacing.lg,
+  blockedListContainer: {
+    paddingHorizontal: Spacing.xl,
+    paddingBottom: Spacing.xl,
   },
   blockedUserRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: Spacing.sm,
+    paddingVertical: Spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.05)',
+  },
+  blockedUserInfo: {
+    flex: 1,
+    marginLeft: Spacing.lg,
   },
   blockedUserName: {
-    flex: 1,
-    marginLeft: Spacing.md,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  blockedUserHandle: {
+    fontSize: 13,
+    marginTop: 2,
+  },
+  unblockButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 14,
+  },
+  unblockText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  closeButton: {
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyText: {
+    textAlign: 'center',
+    padding: Spacing.xl,
+    fontSize: 15,
   },
 });
-import { SafeAreaView } from 'react-native-safe-area-context';
