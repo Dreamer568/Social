@@ -33,7 +33,7 @@ const MOCK_POSTS: PostProps[] = [
     user: { name: 'Jane Doe', handle: 'janedoe', avatar_url: 'https://i.pravatar.cc/150?u=jane' },
     content: 'This app feels so refreshingly human. No algorithms, no AI noise. Just pure expression. Love it! 🌿',
     created_at: '2h ago',
-    likes: 124, comments: 12, reposts: 5,
+    likes: 124, comments: 12,
   },
   {
     id: '2',
@@ -41,14 +41,14 @@ const MOCK_POSTS: PostProps[] = [
     content: 'Just finished a long hike. The silence of the mountains is something we should all experience more often.',
     image_url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1000&auto=format&fit=crop',
     created_at: '4h ago',
-    likes: 89, comments: 8, reposts: 2,
+    likes: 89, comments: 8,
   },
   {
     id: '3',
     user: { name: 'Sarah Connor', handle: 'sconnor', avatar_url: 'https://i.pravatar.cc/150?u=sarah' },
     content: 'Authenticity is the new luxury.',
     created_at: '5h ago',
-    likes: 256, comments: 45, reposts: 88,
+    likes: 256, comments: 45,
   },
 ];
 
@@ -59,15 +59,56 @@ const MOCK_MESSAGES = [
 
 // --- SECTIONS ---
 
-const HomeSection = ({ loading, colors, router }: any) => {
+const HomeSection = ({ loading, colors, router, feedType, setFeedType, colorScheme }: any) => {
   const renderHeader = () => (
-    <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
-      <TouchableOpacity onPress={() => router.push('/search')}>
-        <Ionicons name="search" size={24} color={colors.text} />
+    <View style={[styles.header, { backgroundColor: colors.background, borderBottomWidth: 0 }]}>
+      <TouchableOpacity 
+        style={[styles.circleButton, { backgroundColor: colors.surface, borderColor: colors.border }]} 
+        onPress={() => router.push('/search')}
+      >
+        <Ionicons name="search" size={22} color={colors.text} />
       </TouchableOpacity>
-      <Text style={[styles.headerTitle, { color: colors.text }]}>Veritas</Text>
-      <TouchableOpacity onPress={() => router.push('/notifications')}>
-        <Ionicons name="notifications-outline" size={24} color={colors.text} />
+      
+      <View style={[styles.headerToggleContainer, { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }]}>
+        <TouchableOpacity 
+          style={[
+            styles.headerToggleButton, 
+            feedType === 'World' && { 
+              backgroundColor: colorScheme === 'dark' ? '#2F3336' : '#E1E8ED',
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.2,
+              shadowRadius: 4,
+              elevation: 3
+            }
+          ]}
+          onPress={() => setFeedType('World')}
+        >
+          <Text style={[styles.headerToggleText, { color: feedType === 'World' ? colors.text : colors.textSecondary }]}>World</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[
+            styles.headerToggleButton, 
+            feedType === 'Friends' && { 
+              backgroundColor: colorScheme === 'dark' ? '#2F3336' : '#E1E8ED',
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.2,
+              shadowRadius: 4,
+              elevation: 3
+            }
+          ]}
+          onPress={() => setFeedType('Friends')}
+        >
+          <Text style={[styles.headerToggleText, { color: feedType === 'Friends' ? colors.text : colors.textSecondary }]}>Friends</Text>
+        </TouchableOpacity>
+      </View>
+
+      <TouchableOpacity 
+        style={[styles.circleButton, { backgroundColor: colors.surface, borderColor: colors.border }]} 
+        onPress={() => router.push('/notifications')}
+      >
+        <Ionicons name="notifications-outline" size={22} color={colors.text} />
       </TouchableOpacity>
     </View>
   );
@@ -138,34 +179,37 @@ const MessagesSection = ({ colors }: any) => {
 const ProfileSection = ({ colors }: any) => {
   return (
     <ScrollView style={[styles.sectionContainer, { width: SCREEN_WIDTH }]} contentContainerStyle={{ paddingBottom: 120 }}>
-      <View style={[styles.profileCover, { backgroundColor: colors.border }]} />
-      <View style={styles.profileInfo}>
-        <View style={styles.profileHeaderRow}>
-          <View style={[styles.profileAvatarContainer, { borderColor: colors.background }]}>
-            <Avatar size={80} uri="https://i.pravatar.cc/150?u=me" />
+      <View style={styles.profileCentered}>
+        <View style={styles.profileAvatarLarge}>
+          <Avatar size={100} uri="https://i.pravatar.cc/150?u=me" />
+        </View>
+        
+        <Text style={[styles.profileHandleLarge, { color: colors.text }]}>@yourhandle</Text>
+        <Text style={[styles.profileBioCentered, { color: colors.textSecondary }]}>
+          Human. Thinker. Explorer. 🌿{"\n"}Building Veritas for a better social web.
+        </Text>
+
+        <View style={styles.profileStatsRow}>
+          <View style={styles.profileStatItem}>
+            <Text style={[styles.profileStatValue, { color: colors.text }]}>1.2k</Text>
+            <Text style={[styles.profileStatLabel, { color: colors.textSecondary }]}>Followers</Text>
           </View>
-          <TouchableOpacity style={[styles.editButton, { borderColor: colors.border }]}>
-            <Text style={[styles.editButtonText, { color: colors.text }]}>Edit Profile</Text>
-          </TouchableOpacity>
+          <View style={styles.profileStatItem}>
+            <Text style={[styles.profileStatValue, { color: colors.text }]}>420</Text>
+            <Text style={[styles.profileStatLabel, { color: colors.textSecondary }]}>Following</Text>
+          </View>
         </View>
-        
-        <Text style={[styles.profileName, { color: colors.text }]}>Your Name</Text>
-        <Text style={[styles.profileHandle, { color: colors.textSecondary }]}>@yourhandle</Text>
-        <Text style={[styles.profileBio, { color: colors.text }]}>Human. Thinker. Explorer. 🌿</Text>
-        
-        <View style={styles.statsContainer}>
-          <Text style={[styles.statValue, { color: colors.text }]}>420 <Text style={styles.statLabel}>Following</Text></Text>
-          <Text style={[styles.statValue, { color: colors.text }]}>1.2k <Text style={styles.statLabel}>Followers</Text></Text>
-        </View>
+
+        <TouchableOpacity style={[styles.profileEditButton, { borderColor: colors.border }]}>
+          <Text style={[styles.profileEditButtonText, { color: colors.text }]}>Edit Profile</Text>
+        </TouchableOpacity>
       </View>
       
-      <View style={[styles.tabContainer, { borderBottomColor: colors.border }]}>
-        <Text style={[styles.tabText, { color: colors.text, borderBottomColor: colors.accent, borderBottomWidth: 3 }]}>Posts</Text>
-        <Text style={[styles.tabText, { color: colors.textSecondary }]}>Media</Text>
-        <Text style={[styles.tabText, { color: colors.textSecondary }]}>Likes</Text>
+      <View style={[styles.profileSectionHeader, { borderTopColor: colors.border }]}>
+        <Text style={[styles.profileSectionTitle, { color: colors.text }]}>Posts</Text>
       </View>
       
-      {MOCK_POSTS.slice(0, 1).map(post => <PostCard key={post.id} {...post} />)}
+      {MOCK_POSTS.map(post => <PostCard key={post.id} {...post} />)}
     </ScrollView>
   );
 };
@@ -175,6 +219,7 @@ const ProfileSection = ({ colors }: any) => {
 export default function MainApp() {
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [feedType, setFeedType] = useState('World');
   const router = useRouter();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'dark'];
@@ -212,20 +257,18 @@ export default function MainApp() {
         scrollEventThrottle={16}
         bounces={false}
       >
-        <HomeSection loading={loading} colors={colors} router={router} />
+        <HomeSection 
+          loading={loading} 
+          colors={colors} 
+          router={router} 
+          feedType={feedType} 
+          setFeedType={setFeedType} 
+          colorScheme={colorScheme}
+        />
         <MessagesSection colors={colors} />
         <ProfileSection colors={colors} />
       </Animated.ScrollView>
 
-      {/* FAB (only on Home) */}
-      {activeIndex === 0 && (
-        <TouchableOpacity 
-          style={[styles.fab, { backgroundColor: colors.accent }]}
-          onPress={() => router.push('/new-post')}
-        >
-          <Ionicons name="add" size={32} color="white" />
-        </TouchableOpacity>
-      )}
 
       {/* CUSTOM FLOATING TAB BAR */}
       <View style={[styles.tabBar, { 
@@ -265,6 +308,31 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 22,
     fontWeight: '800',
+  },
+  circleButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  headerToggleContainer: {
+    flexDirection: 'row',
+    padding: 2,
+    borderRadius: 20,
+    width: 160,
+  },
+  headerToggleButton: {
+    flex: 1,
+    paddingVertical: 6,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerToggleText: {
+    fontSize: 14,
+    fontWeight: '700',
   },
   tabBar: {
     position: 'absolute',
@@ -342,68 +410,61 @@ const styles = StyleSheet.create({
   messageText: {
     fontSize: 14,
   },
-  // Profile specific
-  profileCover: {
-    height: 120,
+  // Profile Section Refined
+  profileCentered: {
+    alignItems: 'center',
+    paddingTop: Spacing.xxl,
+    paddingHorizontal: Spacing.xl,
   },
-  profileInfo: {
-    paddingHorizontal: Spacing.lg,
-    marginTop: -40,
-  },
-  profileHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
+  profileAvatarLarge: {
     marginBottom: Spacing.md,
   },
-  profileAvatarContainer: {
-    borderWidth: 4,
-    borderRadius: 44,
+  profileHandleLarge: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: Spacing.sm,
   },
-  editButton: {
-    borderWidth: 1,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: 6,
-    borderRadius: BorderRadius.full,
-  },
-  editButtonText: {
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  profileName: {
-    fontSize: 22,
-    fontWeight: '800',
-  },
-  profileHandle: {
-    fontSize: 16,
-    marginBottom: Spacing.md,
-  },
-  profileBio: {
+  profileBioCentered: {
     fontSize: 15,
-    lineHeight: 20,
-    marginBottom: Spacing.md,
-  },
-  statsContainer: {
-    flexDirection: 'row',
+    textAlign: 'center',
+    lineHeight: 22,
     marginBottom: Spacing.lg,
   },
-  statValue: {
-    fontWeight: '700',
-    marginRight: Spacing.lg,
-  },
-  statLabel: {
-    fontWeight: '400',
-  },
-  tabContainer: {
+  profileStatsRow: {
     flexDirection: 'row',
-    borderBottomWidth: 1,
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.xl,
   },
-  tabText: {
-    flex: 1,
-    textAlign: 'center',
-    paddingVertical: Spacing.md,
+  profileStatItem: {
+    alignItems: 'center',
+    marginHorizontal: Spacing.lg,
+  },
+  profileStatValue: {
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  profileStatLabel: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  profileEditButton: {
+    borderWidth: 1,
+    paddingHorizontal: Spacing.xxl,
+    paddingVertical: 8,
+    borderRadius: BorderRadius.full,
+    marginBottom: Spacing.xxl,
+  },
+  profileEditButtonText: {
     fontWeight: '700',
-    fontSize: 15,
+    fontSize: 14,
+  },
+  profileSectionHeader: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderTopWidth: 1,
+    marginTop: Spacing.md,
+  },
+  profileSectionTitle: {
+    fontSize: 18,
+    fontWeight: '800',
   },
 });

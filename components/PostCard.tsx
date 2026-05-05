@@ -17,7 +17,6 @@ export interface PostProps {
   created_at: string;
   likes: number;
   comments: number;
-  reposts: number;
 }
 
 export const PostCard: React.FC<PostProps> = ({
@@ -28,36 +27,34 @@ export const PostCard: React.FC<PostProps> = ({
   created_at,
   likes,
   comments,
-  reposts,
 }) => {
   const [expanded, setExpanded] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'dark'];
 
   return (
-    <View style={[styles.container, { borderBottomColor: colors.border }]}>
+    <View style={[styles.card, { backgroundColor: colors.surface }]}>
       <View style={styles.header}>
-        <Avatar uri={user.avatar_url} size={48} />
+        <Avatar uri={user.avatar_url} size={42} />
         <View style={styles.headerText}>
-          <View style={styles.userRow}>
-            <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
-              {user.name}
-            </Text>
-            <Text style={[styles.handle, { color: colors.textSecondary }]} numberOfLines={1}>
-              @{user.handle} · {created_at}
-            </Text>
-          </View>
+          <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
+            {user.name}
+          </Text>
+          <Text style={[styles.handle, { color: colors.textSecondary }]} numberOfLines={1}>
+            @{user.handle} · {created_at}
+          </Text>
         </View>
-        <TouchableOpacity>
-          <Ionicons name="ellipsis-horizontal" size={20} color={colors.textSecondary} />
+        <TouchableOpacity style={styles.moreButton}>
+          <Ionicons name="ellipsis-horizontal" size={18} color={colors.textSecondary} />
         </TouchableOpacity>
       </View>
 
       <View style={styles.contentContainer}>
-        <TouchableOpacity onPress={() => setExpanded(!expanded)} activeOpacity={0.7}>
+        <TouchableOpacity onPress={() => setExpanded(!expanded)} activeOpacity={0.8}>
           <Text 
             style={[styles.content, { color: colors.text }]} 
-            numberOfLines={expanded ? undefined : 3}
+            numberOfLines={expanded ? undefined : 4}
           >
             {content}
           </Text>
@@ -72,30 +69,36 @@ export const PostCard: React.FC<PostProps> = ({
         )}
         
         {media_url && media_type === 'audio' && (
-          <View style={[styles.audioPlaceholder, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <Ionicons name="play-circle" size={40} color={colors.accent} />
-            <Text style={[styles.audioText, { color: colors.text }]}>Audio Attachment</Text>
+          <View style={[styles.audioPlaceholder, { backgroundColor: colors.background, borderColor: colors.border }]}>
+            <Ionicons name="play-circle" size={36} color={colors.accent} />
+            <Text style={[styles.audioText, { color: colors.text }]}>Listen to voice note</Text>
           </View>
         )}
       </View>
 
-      <View style={styles.actions}>
-        <TouchableOpacity style={styles.actionButton}>
-          <Ionicons name="chatbubble-outline" size={20} color={colors.textSecondary} />
-          <Text style={[styles.actionText, { color: colors.textSecondary }]}>{comments}</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.actionButton}>
-          <Ionicons name="repeat-outline" size={20} color={colors.textSecondary} />
-          <Text style={[styles.actionText, { color: colors.textSecondary }]}>{reposts}</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.actionButton}>
-          <Ionicons name="heart-outline" size={20} color={colors.textSecondary} />
-          <Text style={[styles.actionText, { color: colors.textSecondary }]}>{likes}</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.actionButton}>
+      <View style={[styles.footer, { borderTopColor: colors.border + '33' }]}>
+        <View style={styles.actionGroup}>
+          <TouchableOpacity style={styles.actionButton}>
+            <Ionicons name="chatbubble-outline" size={20} color={colors.textSecondary} />
+            <Text style={[styles.actionText, { color: colors.textSecondary }]}>{comments}</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.actionButton} 
+            onPress={() => setIsLiked(!isLiked)}
+          >
+            <Ionicons 
+              name={isLiked ? "heart" : "heart-outline"} 
+              size={20} 
+              color={isLiked ? colors.error : colors.textSecondary} 
+            />
+            <Text style={[styles.actionText, { color: isLiked ? colors.error : colors.textSecondary }]}>
+              {isLiked ? likes + 1 : likes}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity style={styles.shareButton}>
           <Ionicons name="share-outline" size={20} color={colors.textSecondary} />
         </TouchableOpacity>
       </View>
@@ -104,70 +107,87 @@ export const PostCard: React.FC<PostProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
+  card: {
+    marginHorizontal: Spacing.md,
+    marginVertical: Spacing.sm,
     padding: Spacing.lg,
-    borderBottomWidth: 1,
+    borderRadius: BorderRadius.xl,
+    // Add subtle shadow for depth
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   header: {
     flexDirection: 'row',
-    marginBottom: Spacing.sm,
+    alignItems: 'center',
+    marginBottom: Spacing.md,
   },
   headerText: {
     flex: 1,
-    marginLeft: Spacing.md,
-    justifyContent: 'center',
-  },
-  userRow: {
-    flexDirection: 'column',
+    marginLeft: Spacing.sm,
   },
   name: {
     fontWeight: '700',
-    fontSize: 16,
+    fontSize: 15,
   },
   handle: {
-    fontSize: 14,
-    marginTop: 2,
+    fontSize: 13,
+  },
+  moreButton: {
+    padding: 4,
   },
   contentContainer: {
-    marginLeft: 0,
-    marginTop: Spacing.xs,
+    marginBottom: Spacing.sm,
   },
   content: {
-    fontSize: 16,
+    fontSize: 15,
     lineHeight: 22,
     marginBottom: Spacing.md,
   },
   image: {
     width: '100%',
-    height: 200,
-    borderRadius: BorderRadius.xl,
-    marginBottom: Spacing.md,
+    height: 220,
+    borderRadius: BorderRadius.lg,
+    marginBottom: Spacing.sm,
   },
   audioPlaceholder: {
     width: '100%',
-    height: 60,
-    borderRadius: BorderRadius.lg,
+    height: 54,
+    borderRadius: BorderRadius.md,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing.md,
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.sm,
     borderWidth: 1,
   },
   audioText: {
-    marginLeft: Spacing.md,
-    fontWeight: '600',
+    marginLeft: Spacing.sm,
+    fontWeight: '500',
+    fontSize: 14,
   },
-  actions: {
+  footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingRight: Spacing.xl,
+    alignItems: 'center',
+    paddingTop: Spacing.md,
+    borderTopWidth: 1,
+  },
+  actionGroup: {
+    flexDirection: 'row',
   },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginRight: Spacing.xl,
   },
   actionText: {
-    fontSize: 13,
-    marginLeft: 4,
+    fontSize: 14,
+    marginLeft: 6,
+    fontWeight: '500',
+  },
+  shareButton: {
+    padding: 4,
   },
 });
