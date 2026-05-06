@@ -5,19 +5,33 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "social",
+    "scheme": "sync-app",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yourname.sync",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Sync needs access to your microphone for voice notes and secure P2P calls.",
+        "NSCameraUsageDescription": "Sync needs access to your camera for video calls and capturing moments.",
+        "NSPhotoLibraryUsageDescription": "Sync needs access to your photos so you can share them with friends."
+      }
     },
     "android": {
+      "package": "com.yourname.sync",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "MODIFY_AUDIO_SETTINGS",
+        "ACCESS_NETWORK_STATE",
+        "INTERNET"
+      ],
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
@@ -27,6 +41,13 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#ffffff"
+        }
+      ],
       [
         "expo-splash-screen",
         {
@@ -43,6 +64,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "4ff01670-c305-4b47-9758-d073dae7356f"
+      }
     }
   }
 }
