@@ -1,6 +1,6 @@
-# Veritas Feed Architecture: Future Implementation
+# Sync Feed Architecture: Future Implementation
 
-This document outlines the proposed "Human-First" feed algorithm and data structure for Veritas. The goal is to move away from addictive rage-bait loops toward a system that surface high-quality content aligned with user interests.
+This document outlines the proposed "Human-First" feed algorithm and data structure for Sync. The goal is to move away from addictive rage-bait loops toward a system that surface high-quality content aligned with user interests.
 
 ## 1. Content Hashing & Data Integrity
 To ensure a clean and trustworthy feed, every post will undergo a normalization and hashing process:
@@ -11,7 +11,7 @@ To ensure a clean and trustworthy feed, every post will undergo a normalization 
     *   **Action**: If a post's content hash already exists in the local "World" feed cache within a certain timeframe, it is flagged as a duplicate and collapsed.
 
 ## 2. Semantic Similarity (Content Grouping)
-Instead of relying purely on hashtags (which can be gamed), Veritas uses **Vector Embeddings** to understand content:
+Instead of relying purely on hashtags (which can be gamed), Sync uses **Vector Embeddings** to understand content:
 
 *   **Embedding Generation**: Posts are passed through a lightweight LLM/Embedding model (e.g., Mistral or OpenAI) to generate a 768 or 1536-dimensional vector.
 *   **Clustering**: Posts are grouped mathematically by their "Distance" (Cosine Similarity). 

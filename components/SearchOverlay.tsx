@@ -51,7 +51,7 @@ export const SearchOverlay = ({ onClose }: any) => {
           <Ionicons name="search" size={20} color={colors.textSecondary} />
           <TextInput
             style={[styles.input, { color: colors.text }]}
-            placeholder="Search Veritas"
+            placeholder="Search Sync"
             placeholderTextColor={colors.textSecondary}
             value={query}
             onChangeText={setQuery}

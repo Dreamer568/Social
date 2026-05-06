@@ -5,27 +5,27 @@ import { PostCard } from '../PostCard';
 import { Spacing, BorderRadius } from '../../constants/theme';
 import { SCREEN_WIDTH } from './constants';
 
-export const ProfileSection = ({ colors, posts, router, onEditPress }: any) => {
+export const ProfileSection = ({ colors, posts, router, onEditPress, me }: any) => {
   return (
     <ScrollView style={[styles.sectionContainer, { width: SCREEN_WIDTH }]} contentContainerStyle={{ paddingBottom: 120 }}>
       <View style={styles.profileCentered}>
         <View style={styles.profileAvatarLarge}>
-          <Avatar size={100} uri="https://i.pravatar.cc/150?u=me" />
+          <Avatar size={100} uri={me?.avatar_url || "https://i.pravatar.cc/150?u=me"} />
         </View>
         
-        <Text style={[styles.profileNameLarge, { color: colors.text }]}>Human Being</Text>
-        <Text style={[styles.profileHandleLarge, { color: colors.textSecondary }]}>@yourhandle</Text>
+        <Text style={[styles.profileNameLarge, { color: colors.text }]}>{me?.name || 'Human Being'}</Text>
+        <Text style={[styles.profileHandleLarge, { color: colors.textSecondary }]}>@{me?.handle || 'yourhandle'}</Text>
         <Text style={[styles.profileBioCentered, { color: colors.textSecondary }]}>
-          Human. Thinker. Explorer. 🌿{"\n"}Building Veritas for a better social web.
+          {me?.bio || 'Human. Thinker. Explorer. 🌿\nBuilding Sync for a better social web.'}
         </Text>
 
         <View style={styles.profileStatsRow}>
           <View style={styles.profileStatItem}>
-            <Text style={[styles.profileStatValue, { color: colors.text }]}>1.2k</Text>
+            <Text style={[styles.profileStatValue, { color: colors.text }]}>{me?.followers || '0'}</Text>
             <Text style={[styles.profileStatLabel, { color: colors.textSecondary }]}>Followers</Text>
           </View>
           <View style={styles.profileStatItem}>
-            <Text style={[styles.profileStatValue, { color: colors.text }]}>420</Text>
+            <Text style={[styles.profileStatValue, { color: colors.text }]}>{me?.friends || '0'}</Text>
             <Text style={[styles.profileStatLabel, { color: colors.textSecondary }]}>Friends</Text>
           </View>
         </View>

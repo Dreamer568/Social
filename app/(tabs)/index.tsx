@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   View, 
   StyleSheet, 
@@ -25,37 +25,17 @@ import { NotificationsOverlay } from '../../components/NotificationsOverlay';
 import { EditProfileOverlay } from '../../components/EditProfileOverlay';
 import { SearchOverlay } from '../../components/SearchOverlay';
 
-// --- MOCK DATA ---
-const MOCK_POSTS: PostProps[] = [
-  { id: '1', user: { name: 'Jane Doe', handle: 'janedoe', avatar_url: 'https://i.pravatar.cc/150?u=jane' }, content: 'This app feels so refreshingly human. No algorithms, no AI noise. Just pure expression. Love it! 🌿', created_at: '2h ago', likes: 124, comments: 12 },
-  { id: '2', user: { name: 'Alex Smith', handle: 'asmith', avatar_url: 'https://i.pravatar.cc/150?u=alex' }, content: 'Just finished a long hike. The silence of the mountains is something we should all experience more often.', media_url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1000&auto=format&fit=crop', media_type: 'image', created_at: '4h ago', likes: 89, comments: 8 },
-  { id: '3', user: { name: 'Sarah Connor', handle: 'sconnor', avatar_url: 'https://i.pravatar.cc/150?u=sarah' }, content: 'Authenticity is the new luxury.', created_at: '5h ago', likes: 256, comments: 45 },
-  { id: '4', user: { name: 'Marcus Chen', handle: 'mchen', avatar_url: 'https://i.pravatar.cc/150?u=marcus' }, content: 'Morning coffee and a blank notebook. My favorite way to start the day.', media_url: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?q=80&w=1000&auto=format&fit=crop', media_type: 'image', created_at: '6h ago', likes: 42, comments: 3 },
-  { id: '5', user: { name: 'Chloe Bennett', handle: 'chloeb', avatar_url: 'https://i.pravatar.cc/150?u=chloe' }, content: 'Unpopular opinion: we don’t need more productivity hacks. We need more naps and long walks without our phones.', created_at: '8h ago', likes: 512, comments: 89 },
-  { id: '6', user: { name: 'Jordan Taylor', handle: 'jtaylor', avatar_url: 'https://i.pravatar.cc/150?u=jordan' }, content: 'The lighting in the studio today was just perfect.', media_url: 'https://images.unsplash.com/photo-1518131394553-8d960bf9830d?q=80&w=1000&auto=format&fit=crop', media_type: 'image', created_at: '12h ago', likes: 15, comments: 1 },
-  { id: '7', user: { name: 'Maya Patel', handle: 'mayap', avatar_url: 'https://i.pravatar.cc/150?u=maya' }, content: 'Finally finished reading "The Art of Slow Living". Highly recommend to anyone feeling the burnout.', created_at: '1d ago', likes: 93, comments: 14 },
-  { id: '8', user: { name: 'Liam Wilson', handle: 'liamw', avatar_url: 'https://i.pravatar.cc/150?u=liam' }, content: 'Rainy days in the city have a soul of their own.', media_url: 'https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?q=80&w=1000&auto=format&fit=crop', media_type: 'image', created_at: '1d ago', likes: 210, comments: 22 },
-  { id: '9', user: { name: 'Sophie Martin', handle: 'smartin', avatar_url: 'https://i.pravatar.cc/150?u=sophie' }, content: 'Deleting all my other social apps today. Let’s see how long this experiment lasts. ✌️', created_at: '2d ago', likes: 340, comments: 56 },
-  { id: '10', user: { name: 'Daniel Kim', handle: 'dkim', avatar_url: 'https://i.pravatar.cc/150?u=daniel' }, content: 'Found this hidden gem of a bakery in the West End. The sourdough is life-changing.', media_url: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?q=80&w=1000&auto=format&fit=crop', media_type: 'image', created_at: '3d ago', likes: 77, comments: 9 }
-];
-
-const MOCK_MESSAGES = [
-  { id: '1', user: { name: 'David Miller', handle: 'davidm', avatar_url: 'https://i.pravatar.cc/150?u=david' }, lastMessage: 'See you tomorrow at the cafe!', time: '10:30 AM', unread: 2, isOnline: true },
-  { id: '3', user: { name: 'Marcus Chen', handle: 'mchen', avatar_url: 'https://i.pravatar.cc/150?u=marcus' }, lastMessage: 'Do you have the link to that book?', time: '9:45 AM', unread: 1, isOnline: true },
-  { id: '4', user: { name: 'Chloe Bennett', handle: 'chloeb', avatar_url: 'https://i.pravatar.cc/150?u=chloe' }, lastMessage: 'I completely agree with your last post.', time: '8:15 AM', unread: 0, isOnline: true },
-  { id: '2', user: { name: 'Elena Rodriguez', handle: 'elena_r', avatar_url: 'https://i.pravatar.cc/150?u=elena' }, lastMessage: 'That photo you posted is amazing!', time: 'Yesterday', unread: 0, isOnline: false },
-  { id: '6', user: { name: 'Aria Stark', handle: 'astark', avatar_url: 'https://i.pravatar.cc/150?u=aria' }, lastMessage: 'Just sent over the drafts.', time: 'Sunday', unread: 5, isOnline: false },
-  { id: '5', user: { name: 'Lucas Thorne', handle: 'lthorne', avatar_url: 'https://i.pravatar.cc/150?u=lucas' }, lastMessage: 'Are we still on for the gallery?', time: 'Monday', unread: 0, isOnline: true },
-  { id: '7', user: { name: 'Julian Voss', handle: 'jvoss', avatar_url: 'https://i.pravatar.cc/150?u=julian' }, lastMessage: 'Haha, I knew you would like it!', time: 'Oct 12', unread: 0, isOnline: false },
-  { id: '8', user: { name: 'Nina Simone', handle: 'nsimone', avatar_url: 'https://i.pravatar.cc/150?u=nina' }, lastMessage: 'Can you send the address again?', time: 'Oct 10', unread: 0, isOnline: false }
-];
+// API & Mock Data
+import { api } from '../../lib/api';
 
 export default function MainApp() {
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
   const [feedType, setFeedType] = useState('World');
-  const [messages, setMessages] = useState(MOCK_MESSAGES);
+  const [posts, setPosts] = useState<PostProps[]>([]);
+  const [messages, setMessages] = useState<any[]>([]);
   const [blockedUsers, setBlockedUsers] = useState<any[]>([]);
+  const [me, setMe] = useState<any>(null);
   
   // Overlay States
   const [openChatUser, setOpenChatUser] = useState<any>(null);
@@ -68,6 +48,24 @@ export default function MainApp() {
   const colors = Colors[colorScheme ?? 'dark'];
   const scrollRef = useRef<ScrollView>(null);
   const scrollX = useRef(new Animated.Value(0)).current;
+
+  // Data Fetching Logic (Reusable)
+  const refreshData = useCallback(async (showLoading = false) => {
+    if (showLoading) setLoading(true);
+    const [allPosts, allMessages, userData] = await Promise.all([
+      api.posts.getAll(),
+      api.messages.getAll(),
+      api.user.getMe()
+    ]);
+    setPosts(allPosts as any);
+    setMessages(allMessages);
+    setMe(userData);
+    if (showLoading) setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    refreshData(true);
+  }, [refreshData]);
 
   // Handlers for Messaging
   const onPinChat = (id: string) => {
@@ -102,11 +100,6 @@ export default function MainApp() {
     setMessages(prev => prev.filter(m => m.id !== id));
   };
 
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 2000);
-    return () => clearTimeout(timer);
-  }, []);
-
   const onScroll = Animated.event(
     [{ nativeEvent: { contentOffset: { x: scrollX } } }],
     {
@@ -127,6 +120,9 @@ export default function MainApp() {
     extrapolate: 'clamp',
   });
 
+  // Filter posts for user profile
+  const profilePosts = posts.filter(post => post.user.handle === me?.handle);
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <Animated.ScrollView
@@ -145,7 +141,7 @@ export default function MainApp() {
           feedType={feedType} 
           setFeedType={setFeedType} 
           colorScheme={colorScheme}
-          posts={MOCK_POSTS}
+          posts={posts}
           onNotificationPress={() => setShowNotifications(true)}
           onSearchPress={() => setShowSearch(true)}
         />
@@ -163,9 +159,10 @@ export default function MainApp() {
         />
         <ProfileSection 
           colors={colors} 
-          posts={MOCK_POSTS.slice(0, 2)}
+          posts={profilePosts}
           router={router}
           onEditPress={() => setShowEditProfile(true)}
+          me={me}
         />
       </Animated.ScrollView>
 
@@ -208,7 +205,10 @@ export default function MainApp() {
         />
       )}
       {showEditProfile && (
-        <EditProfileOverlay onClose={() => setShowEditProfile(false)} />
+        <EditProfileOverlay 
+          onClose={() => setShowEditProfile(false)} 
+          onSave={() => refreshData()}
+        />
       )}
       {showSearch && (
         <SearchOverlay onClose={() => setShowSearch(false)} />

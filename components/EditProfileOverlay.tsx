@@ -10,23 +10,35 @@ import {
   Dimensions,
   useColorScheme,
   KeyboardAvoidingView,
-  Platform
+  Platform,
+  ActivityIndicator
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Avatar } from './Avatar';
 import { Colors, Spacing, BorderRadius } from '../constants/theme';
+import { api } from '../lib/api';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-export const EditProfileOverlay = ({ onClose }: any) => {
+export const EditProfileOverlay = ({ onClose, onSave }: any) => {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'dark'];
-  const [name, setName] = useState('Human Being');
-  const [handle, setHandle] = useState('yourhandle');
-  const [bio, setBio] = useState('Human. Thinker. Explorer. 🌿\nBuilding Veritas for a better social web.');
+  
+  const [name, setName] = useState('');
+  const [handle, setHandle] = useState('');
+  const [bio, setBio] = useState('');
+  const [saving, setSaving] = useState(false);
+  
   const slideAnim = useRef(new Animated.Value(SCREEN_WIDTH)).current;
 
   useEffect(() => {
+    // Initial fetch
+    api.user.getMe().then(user => {
+      setName(user.name);
+      setHandle(user.handle);
+      setBio(user.bio);
+    });
+
     Animated.spring(slideAnim, {
       toValue: 0,
       useNativeDriver: true,
@@ -43,18 +55,30 @@ export const EditProfileOverlay = ({ onClose }: any) => {
     }).start(() => onClose());
   };
 
+  const handleSave = async () => {
+    setSaving(true);
+    await api.user.updateProfile({ name, handle, bio });
+    setSaving(false);
+    onSave(); // Trigger refresh in parent
+    handleClose();
+  };
+
   return (
     <Animated.View style={[
       styles.overlay, 
       { backgroundColor: colors.background, transform: [{ translateX: slideAnim }] }
     ]}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
+        <TouchableOpacity onPress={handleClose} style={styles.closeButton} disabled={saving}>
           <Ionicons name="close" size={28} color={colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.text }]}>Edit Profile</Text>
-        <TouchableOpacity onPress={handleClose}>
-          <Text style={[styles.saveText, { color: colors.accent }]}>Save</Text>
+        <TouchableOpacity onPress={handleSave} disabled={saving}>
+          {saving ? (
+            <ActivityIndicator size="small" color={colors.accent} />
+          ) : (
+            <Text style={[styles.saveText, { color: colors.accent }]}>Save</Text>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -79,6 +103,7 @@ export const EditProfileOverlay = ({ onClose }: any) => {
                 style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
                 value={name}
                 onChangeText={setName}
+                editable={!saving}
               />
             </View>
             <View style={styles.inputGroup}>
@@ -88,6 +113,7 @@ export const EditProfileOverlay = ({ onClose }: any) => {
                 value={handle}
                 onChangeText={setHandle}
                 autoCapitalize="none"
+                editable={!saving}
               />
             </View>
             <View style={styles.inputGroup}>
@@ -97,6 +123,7 @@ export const EditProfileOverlay = ({ onClose }: any) => {
                 value={bio}
                 onChangeText={setBio}
                 multiline
+                editable={!saving}
               />
             </View>
           </View>

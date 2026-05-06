@@ -26,7 +26,7 @@ interface Message {
 }
 
 const MOCK_CHAT: Message[] = [
-  { id: '1', text: 'Hey! Did you see the new Veritas update?', sender: 'other', time: '10:00 AM' },
+  { id: '1', text: 'Hey! Did you see the new Sync update?', sender: 'other', time: '10:00 AM' },
   { id: '2', text: 'Yeah, the liquid navigation is so smooth!', sender: 'me', time: '10:02 AM' },
   { id: '3', text: 'Exactly! It feels much more human than the old UI.', sender: 'other', time: '10:03 AM' },
   { id: '4', text: 'I agree. No more Twitter vibes.', sender: 'me', time: '10:05 AM' },
