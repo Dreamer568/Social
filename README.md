@@ -1,50 +1,67 @@
-# Welcome to your Expo app 👋
+# 🌿 Sync — Human-First Social Architecture
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+**Sync** is a high-performance, privacy-focused social experience built to feel "liquid." It moves away from traditional screen-to-screen navigation in favor of a **Zero-Flicker Overlay Architecture**, ensuring the user's context is never lost.
 
-## Get started
+![Sync Header](https://raw.githubusercontent.com/username/sync/main/assets/readme-header.png)
 
-1. Install dependencies
+## ✨ The Vision: "Human-First"
+Most social apps feel like a collection of web pages. **Sync** feels like a single, living interface. Every transition is a smooth overlay, every message is a direct connection, and every interaction is designed to feel natural and immediate.
 
-   ```bash
-   npm install
-   ```
+## 🚀 Key Features
 
-2. Start the app
+### 💎 Zero-Flicker UI
+Built using **React Native Reanimated**, all major sections (Chat, Notifications, Search, Profile) are handled as side-sliding or bottom-up overlays. This preserves the state of the main feed and eliminates the "white flash" or "jumpiness" found in traditional navigation.
 
-   ```bash
-   npx expo start
-   ```
+### 🔐 P2P & E2E Messaging (Blueprint)
+*   **End-to-End Encryption**: Messages are encrypted locally before ever leaving your device.
+*   **P2P Signaling**: Utilizes WebRTC for direct device-to-device communication when both users are online.
+*   **Supabase Buffer**: A minimal, encrypted "dead drop" buffer in Supabase stores messages temporarily only when the recipient is offline.
 
-In the output, you'll find options to open the app in a
+### 📞 Pro Native Integration
+*   **WebRTC Calling**: High-quality, low-latency audio/video calls.
+*   **System Call UI**: Integrated with iOS CallKit and Android ConnectionService via `react-native-callkeep`.
+*   **Voice Waveforms**: High-fidelity voice notes with live "liquid" visualizers (powered by Skia).
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### 🏷️ Intelligent Content
+*   **Rich Text Parsing**: Automatic identification and styling of `@handles` and `#hashtags`.
+*   **Mutable Memory DB**: A custom-built data abstraction layer that simulates a real backend, making it fully "Supabase-Ready."
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## 🛠️ Tech Stack
+*   **Framework**: Expo (SDK 54) + React Native
+*   **Animations**: React Native Reanimated (Liquid Physics)
+*   **Database**: Supabase (PostgreSQL + Real-time)
+*   **Native Modules**: WebRTC, CallKeep, expo-notifications
+*   **Graphics**: Shopify Skia (planned for waveforms)
 
-## Get a fresh project
+## 🏗️ Getting Started
 
-When you're ready, run:
+### Prerequisites
+*   Node.js & npm
+*   Expo Go (for basic UI) or **Development Build** (for Calling/P2P)
 
-```bash
-npm run reset-project
-```
+### Installation
+1.  Clone the repo:
+    ```bash
+    git clone https://github.com/yourusername/sync.git
+    ```
+2.  Install dependencies:
+    ```bash
+    npm install
+    ```
+3.  Start the development server:
+    ```bash
+    npx expo start
+    ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## 🗺️ Roadmap
+- [x] Zero-Flicker Overlay Architecture
+- [x] Mutable Memory "Database" Simulation
+- [x] Rich Text Handle/Hashtag Parsing
+- [/] EAS Development Build Integration
+- [ ] Supabase Cloud Migration
+- [ ] P2P WebRTC Signal Handshake
+- [ ] Biometric App Lock (FaceID)
 
-## Learn more
+---
 
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Built with 🌿 by [Your Name/Handle]
