@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Avatar } from './Avatar';
 import { Colors, Spacing, BorderRadius } from '../constants/theme';
+import { RichText } from './RichText';
 
 export interface PostProps {
   id: string;
@@ -57,18 +58,9 @@ export const PostCard: React.FC<PostProps> = ({
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity 
-        activeOpacity={0.9} 
-        onPress={() => setExpanded(!expanded)}
-        style={styles.contentContainer}
-      >
-        <Text 
-          style={[styles.content, { color: colors.text }]} 
-          numberOfLines={expanded ? undefined : 4}
-        >
-          {content}
-        </Text>
-      </TouchableOpacity>
+      <View style={styles.contentContainer}>
+        <RichText content={content} />
+      </View>
 
       {media_url && media_type === 'image' && (
         <Image 
@@ -112,7 +104,6 @@ const styles = StyleSheet.create({
     marginVertical: Spacing.sm,
     borderRadius: BorderRadius.xl,
     padding: Spacing.md,
-    // Shadow for depth
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
@@ -141,10 +132,6 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     marginBottom: Spacing.md,
-  },
-  content: {
-    fontSize: 15,
-    lineHeight: 22,
   },
   mediaImage: {
     width: '100%',
