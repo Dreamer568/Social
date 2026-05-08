@@ -1,38 +1,92 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useColorScheme } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useColorScheme, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Avatar } from '../../components/Avatar';
 import { PostCard } from '../../components/PostCard';
 import { Colors, Spacing, BorderRadius } from '../../constants/theme';
+import { api } from '../../lib/api';
 
 export default function UserProfileScreen() {
   const { id } = useLocalSearchParams();
-  const handle = Array.isArray(id) ? id[0] : id || 'user';
+  const handle = Array.isArray(id) ? id[0] : id || '';
   const router = useRouter();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'dark'];
 
-  // Mock data for this specific user
-  const user = {
-    name: handle.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') || 'User',
-    handle: handle,
-    bio: 'Digital explorer and content creator. Passionate about minimalism and technology. 🌿',
-    followers: '1.5k',
-    following: '320',
-    avatar: `https://i.pravatar.cc/150?u=${handle}`
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const [stats, setStats] = useState({ followers: 0, following: 0 });
+  const [posts, setPosts] = useState<any[]>([]);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  useEffect(() => {
+    loadProfile();
+  }, [handle]);
+
+  const loadProfile = async () => {
+    if (!handle) return;
+    setLoading(true);
+    try {
+      const userData = await api.user.getByHandle(handle);
+      if (userData) {
+        setUser(userData);
+        const [userPosts, followingStatus, userStats] = await Promise.all([
+          api.posts.getByUser(userData.id),
+          api.user.isFollowing(userData.id),
+          api.user.getStats(userData.id)
+        ]);
+        setPosts(userPosts);
+        setIsFollowing(followingStatus);
+        setStats(userStats);
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const MOCK_USER_POSTS = [
-    {
-      id: 'p1',
-      user: { name: user.name, handle: user.handle, avatar_url: user.avatar },
-      content: 'Just exploring the new Veritas interface. It feels so fluid!',
-      created_at: '2h ago',
-      likes: 45, comments: 4,
+  const handleFollowToggle = async () => {
+    if (!user || actionLoading) return;
+    setActionLoading(true);
+    try {
+      if (isFollowing) {
+        await api.user.unfollow(user.id);
+        setIsFollowing(false);
+        setStats(prev => ({ ...prev, followers: Math.max(0, prev.followers - 1) }));
+      } else {
+        await api.user.follow(user.id);
+        setIsFollowing(true);
+        setStats(prev => ({ ...prev, followers: prev.followers + 1 }));
+      }
+    } catch (error) {
+      console.error('Follow error:', error);
+    } finally {
+      setActionLoading(false);
     }
-  ];
+  };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.centered, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.accent} />
+      </View>
+    );
+  }
+
+  if (!user) {
+    return (
+      <View style={[styles.container, styles.centered, { backgroundColor: colors.background }]}>
+        <Text style={{ color: colors.textSecondary }}>User not found</Text>
+        <TouchableOpacity onPress={() => router.back()} style={{ marginTop: 20 }}>
+          <Text style={{ color: colors.accent }}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
@@ -49,34 +103,47 @@ export default function UserProfileScreen() {
       <ScrollView style={styles.flex} contentContainerStyle={{ paddingBottom: 40 }}>
         <View style={styles.profileCentered}>
           <View style={styles.profileAvatarLarge}>
-            <Avatar size={100} uri={user.avatar} />
+            <Avatar size={100} uri={user.avatar_url} />
           </View>
           
           <Text style={[styles.profileNameLarge, { color: colors.text }]}>{user.name}</Text>
           <Text style={[styles.profileHandleLarge, { color: colors.textSecondary }]}>@{user.handle}</Text>
           
           <Text style={[styles.profileBioCentered, { color: colors.text }]}>
-            {user.bio}
+            {user.bio || 'No bio yet. 🌿'}
           </Text>
 
           <View style={styles.profileStatsRow}>
             <View style={styles.profileStatItem}>
-              <Text style={[styles.profileStatValue, { color: colors.text }]}>{user.followers}</Text>
+              <Text style={[styles.profileStatValue, { color: colors.text }]}>{stats.followers}</Text>
               <Text style={[styles.profileStatLabel, { color: colors.textSecondary }]}>Followers</Text>
             </View>
             <View style={styles.profileStatItem}>
-              <Text style={[styles.profileStatValue, { color: colors.text }]}>{user.following}</Text>
-              <Text style={[styles.profileStatLabel, { color: colors.textSecondary }]}>Friends</Text>
+              <Text style={[styles.profileStatValue, { color: colors.text }]}>{stats.following}</Text>
+              <Text style={[styles.profileStatLabel, { color: colors.textSecondary }]}>Following</Text>
             </View>
           </View>
 
           <View style={styles.profileActionRow}>
-            <TouchableOpacity style={[styles.followButton, { backgroundColor: colors.accent }]}>
-              <Text style={styles.followButtonText}>Follow</Text>
+            <TouchableOpacity 
+              style={[
+                styles.followButton, 
+                { backgroundColor: isFollowing ? colors.surface : colors.accent, borderColor: colors.border, borderWidth: isFollowing ? 1 : 0 }
+              ]}
+              onPress={handleFollowToggle}
+              disabled={actionLoading}
+            >
+              {actionLoading ? (
+                <ActivityIndicator size="small" color={isFollowing ? colors.text : "white"} />
+              ) : (
+                <Text style={[styles.followButtonText, { color: isFollowing ? colors.text : "white" }]}>
+                  {isFollowing ? 'Following' : 'Follow'}
+                </Text>
+              )}
             </TouchableOpacity>
             <TouchableOpacity 
               style={[styles.messageButton, { borderColor: colors.border, borderWidth: 1 }]}
-              onPress={() => router.push(`/chat/${handle}` as any)}
+              onPress={() => router.push(`/chat/${user.handle}` as any)}
             >
               <Ionicons name="chatbubble-outline" size={20} color={colors.text} />
             </TouchableOpacity>
@@ -87,7 +154,13 @@ export default function UserProfileScreen() {
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Posts</Text>
         </View>
         
-        {MOCK_USER_POSTS.map(post => <PostCard key={post.id} {...post} />)}
+        {posts.length > 0 ? (
+          posts.map(post => <PostCard key={post.id} {...post} />)
+        ) : (
+          <View style={styles.emptyContainer}>
+            <Text style={{ color: colors.textSecondary }}>No posts yet</Text>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -95,6 +168,7 @@ export default function UserProfileScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  centered: { justifyContent: 'center', alignItems: 'center' },
   flex: { flex: 1 },
   header: {
     flexDirection: 'row',
@@ -158,9 +232,11 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: BorderRadius.full,
     marginRight: Spacing.md,
+    minWidth: 140,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   followButtonText: {
-    color: 'white',
     fontWeight: '700',
     fontSize: 16,
   },
@@ -181,4 +257,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '800',
   },
+  emptyContainer: {
+    padding: Spacing.xxl,
+    alignItems: 'center',
+  }
 });
