@@ -51,23 +51,6 @@ export const api = {
       };
     },
 
-    // LISTS: Get followers or following
-    getFollowers: async (userId: string) => {
-      const { data } = await supabase
-        .from('follows')
-        .select('follower:profiles!follows_follower_id_fkey(*)')
-        .eq('following_id', userId);
-      return data?.map(f => f.follower) || [];
-    },
-
-    getFollowing: async (userId: string) => {
-      const { data } = await supabase
-        .from('follows')
-        .select('following:profiles!follows_following_id_fkey(*)')
-        .eq('follower_id', userId);
-      return data?.map(f => f.following) || [];
-    },
-
     search: async (query: string) => {
       const { data } = await supabase
         .from('profiles')

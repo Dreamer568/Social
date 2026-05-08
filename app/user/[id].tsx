@@ -5,7 +5,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Avatar } from '../../components/Avatar';
 import { PostCard } from '../../components/PostCard';
-import { FollowListOverlay } from '../../components/FollowListOverlay';
 import { Colors, Spacing, BorderRadius } from '../../constants/theme';
 import { api } from '../../lib/api';
 
@@ -22,7 +21,6 @@ export default function UserProfileScreen() {
   const [posts, setPosts] = useState<any[]>([]);
   const [isFollowing, setIsFollowing] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
-  const [showFollowList, setShowFollowList] = useState<'followers' | 'following' | null>(null);
 
   useEffect(() => {
     loadProfile();
@@ -116,20 +114,14 @@ export default function UserProfileScreen() {
           </Text>
 
           <View style={styles.profileStatsRow}>
-            <TouchableOpacity 
-              style={styles.profileStatItem}
-              onPress={() => setShowFollowList('followers')}
-            >
+            <View style={styles.profileStatItem}>
               <Text style={[styles.profileStatValue, { color: colors.text }]}>{stats.followers}</Text>
               <Text style={[styles.profileStatLabel, { color: colors.textSecondary }]}>Followers</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.profileStatItem}
-              onPress={() => setShowFollowList('following')}
-            >
+            </View>
+            <View style={styles.profileStatItem}>
               <Text style={[styles.profileStatValue, { color: colors.text }]}>{stats.following}</Text>
               <Text style={[styles.profileStatLabel, { color: colors.textSecondary }]}>Following</Text>
-            </TouchableOpacity>
+            </View>
           </View>
 
           <View style={styles.profileActionRow}>
@@ -170,14 +162,6 @@ export default function UserProfileScreen() {
           </View>
         )}
       </ScrollView>
-
-      {showFollowList && (
-        <FollowListOverlay 
-          userId={user.id} 
-          type={showFollowList} 
-          onClose={() => setShowFollowList(null)} 
-        />
-      )}
     </SafeAreaView>
   );
 }

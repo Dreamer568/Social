@@ -5,7 +5,7 @@ import { PostCard } from '../PostCard';
 import { Spacing, BorderRadius } from '../../constants/theme';
 import { SCREEN_WIDTH } from './constants';
 
-export const ProfileSection = ({ colors, posts, router, onEditPress, me, stats, onStatsPress }: any) => {
+export const ProfileSection = ({ colors, posts, router, onEditPress, me }: any) => {
   return (
     <ScrollView style={[styles.sectionContainer, { width: SCREEN_WIDTH }]} contentContainerStyle={{ paddingBottom: 120 }}>
       <View style={styles.profileCentered}>
@@ -15,25 +15,19 @@ export const ProfileSection = ({ colors, posts, router, onEditPress, me, stats, 
         
         <Text style={[styles.profileNameLarge, { color: colors.text }]}>{me?.name || 'Human Being'}</Text>
         <Text style={[styles.profileHandleLarge, { color: colors.textSecondary }]}>@{me?.handle || 'yourhandle'}</Text>
-        <Text style={[styles.profileBioCentered, { color: colors.text }]}>
+        <Text style={[styles.profileBioCentered, { color: colors.textSecondary }]}>
           {me?.bio || 'Human. Thinker. Explorer. 🌿\nBuilding Sync for a better social web.'}
         </Text>
 
         <View style={styles.profileStatsRow}>
-          <TouchableOpacity 
-            style={styles.profileStatItem}
-            onPress={() => onStatsPress('followers')}
-          >
-            <Text style={[styles.profileStatValue, { color: colors.text }]}>{stats?.followers || '0'}</Text>
+          <View style={styles.profileStatItem}>
+            <Text style={[styles.profileStatValue, { color: colors.text }]}>{me?.followers || '0'}</Text>
             <Text style={[styles.profileStatLabel, { color: colors.textSecondary }]}>Followers</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.profileStatItem}
-            onPress={() => onStatsPress('following')}
-          >
-            <Text style={[styles.profileStatValue, { color: colors.text }]}>{stats?.following || '0'}</Text>
-            <Text style={[styles.profileStatLabel, { color: colors.textSecondary }]}>Following</Text>
-          </TouchableOpacity>
+          </View>
+          <View style={styles.profileStatItem}>
+            <Text style={[styles.profileStatValue, { color: colors.text }]}>{me?.friends || '0'}</Text>
+            <Text style={[styles.profileStatLabel, { color: colors.textSecondary }]}>Friends</Text>
+          </View>
         </View>
 
         <TouchableOpacity 
@@ -48,13 +42,7 @@ export const ProfileSection = ({ colors, posts, router, onEditPress, me, stats, 
         <Text style={[styles.profileSectionTitle, { color: colors.text }]}>Posts</Text>
       </View>
       
-      {posts.length > 0 ? (
-        posts.map((post: any) => <PostCard key={post.id} {...post} />)
-      ) : (
-        <View style={styles.emptyContainer}>
-          <Text style={{ color: colors.textSecondary }}>No posts yet</Text>
-        </View>
-      )}
+      {posts.map((post: any) => <PostCard key={post.id} {...post} />)}
     </ScrollView>
   );
 };
@@ -123,8 +111,4 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '800',
   },
-  emptyContainer: {
-    padding: Spacing.xxl,
-    alignItems: 'center',
-  }
 });
