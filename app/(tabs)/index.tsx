@@ -25,6 +25,7 @@ import { ChatOverlay } from '../../components/ChatOverlay';
 import { NotificationsOverlay } from '../../components/NotificationsOverlay';
 import { EditProfileOverlay } from '../../components/EditProfileOverlay';
 import { SearchOverlay } from '../../components/SearchOverlay';
+import { FollowListOverlay } from '../../components/FollowListOverlay';
 
 // API & Mock Data
 import { api } from '../../lib/api';
@@ -37,12 +38,14 @@ export default function MainApp() {
   const [messages, setMessages] = useState<any[]>([]);
   const [blockedUsers, setBlockedUsers] = useState<any[]>([]);
   const [me, setMe] = useState<any>(null);
+  const [meStats, setMeStats] = useState({ followers: 0, following: 0 });
   
   // Overlay States
   const [openChatUser, setOpenChatUser] = useState<any>(null);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [showFollowList, setShowFollowList] = useState<{ type: 'followers' | 'following', userId: string } | null>(null);
 
   const router = useRouter();
   const colorScheme = useColorScheme();
@@ -59,9 +62,15 @@ export default function MainApp() {
         api.messages.getAll(),
         api.user.getMe()
       ]);
+      
       setPosts(allPosts as any);
       setMessages(allMessages);
       setMe(userData);
+      
+      if (userData) {
+        const stats = await api.user.getStats(userData.id);
+        setMeStats(stats);
+      }
     } catch (error) {
       console.error('Refresh data error:', error);
     } finally {
@@ -72,7 +81,6 @@ export default function MainApp() {
   useEffect(() => {
     refreshData(true);
 
-    // Listen for auth changes to refresh data (like when you log in/out)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
       refreshData();
     });
@@ -130,7 +138,6 @@ export default function MainApp() {
     extrapolate: 'clamp',
   });
 
-  // Filter posts for user profile
   const profilePosts = posts.filter(post => post.user?.handle === me?.handle);
 
   return (
@@ -172,7 +179,9 @@ export default function MainApp() {
           posts={profilePosts} 
           router={router} 
           me={me}
+          stats={meStats}
           onEditPress={() => setShowEditProfile(true)}
+          onStatsPress={(type: 'followers' | 'following') => setShowFollowList({ type, userId: me.id })}
         />
       </Animated.ScrollView>
 
@@ -198,6 +207,7 @@ export default function MainApp() {
       {showNotifications && <NotificationsOverlay onClose={() => setShowNotifications(false)} />}
       {showEditProfile && <EditProfileOverlay onClose={() => setShowEditProfile(false)} onSave={() => { setShowEditProfile(false); refreshData(); }} />}
       {showSearch && <SearchOverlay onClose={() => setShowSearch(false)} />}
+      {showFollowList && <FollowListOverlay userId={showFollowList.userId} type={showFollowList.type} onClose={() => setShowFollowList(null)} />}
     </SafeAreaView>
   );
 }
