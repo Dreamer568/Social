@@ -37,6 +37,7 @@ export default function MainApp() {
   const [messages, setMessages] = useState<any[]>([]);
   const [blockedUsers, setBlockedUsers] = useState<any[]>([]);
   const [me, setMe] = useState<any>(null);
+  const [meStats, setMeStats] = useState({ followers: 0, following: 0 });
   
   // Overlay States
   const [openChatUser, setOpenChatUser] = useState<any>(null);
@@ -62,6 +63,11 @@ export default function MainApp() {
       setPosts(allPosts as any);
       setMessages(allMessages);
       setMe(userData);
+
+      if (userData) {
+        const stats = await api.user.getStats(userData.id);
+        setMeStats(stats);
+      }
     } catch (error) {
       console.error('Refresh error:', error);
     } finally {
@@ -176,6 +182,7 @@ export default function MainApp() {
           router={router} 
           onEditPress={() => setShowEditProfile(true)}
           me={me}
+          stats={meStats}
         />
       </Animated.ScrollView>
 

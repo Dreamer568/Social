@@ -5,7 +5,7 @@ import { PostCard } from '../PostCard';
 import { Spacing, BorderRadius } from '../../constants/theme';
 import { SCREEN_WIDTH } from './constants';
 
-export const ProfileSection = ({ colors, posts, router, onEditPress, me }: any) => {
+export const ProfileSection = ({ colors, posts, router, onEditPress, me, stats }: any) => {
   return (
     <ScrollView style={[styles.sectionContainer, { width: SCREEN_WIDTH }]} contentContainerStyle={{ paddingBottom: 120 }}>
       <View style={styles.profileCentered}>
@@ -20,14 +20,20 @@ export const ProfileSection = ({ colors, posts, router, onEditPress, me }: any) 
         </Text>
 
         <View style={styles.profileStatsRow}>
-          <View style={styles.profileStatItem}>
-            <Text style={[styles.profileStatValue, { color: colors.text }]}>{me?.followers || '0'}</Text>
+          <TouchableOpacity 
+            style={styles.profileStatItem}
+            onPress={() => router.push({ pathname: '/user/list', params: { userId: me?.id, type: 'followers', name: me?.name } })}
+          >
+            <Text style={[styles.profileStatValue, { color: colors.text }]}>{stats?.followers || '0'}</Text>
             <Text style={[styles.profileStatLabel, { color: colors.textSecondary }]}>Followers</Text>
-          </View>
-          <View style={styles.profileStatItem}>
-            <Text style={[styles.profileStatValue, { color: colors.text }]}>{me?.friends || '0'}</Text>
-            <Text style={[styles.profileStatLabel, { color: colors.textSecondary }]}>Friends</Text>
-          </View>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.profileStatItem}
+            onPress={() => router.push({ pathname: '/user/list', params: { userId: me?.id, type: 'following', name: me?.name } })}
+          >
+            <Text style={[styles.profileStatValue, { color: colors.text }]}>{stats?.following || '0'}</Text>
+            <Text style={[styles.profileStatLabel, { color: colors.textSecondary }]}>Following</Text>
+          </TouchableOpacity>
         </View>
 
         <TouchableOpacity 

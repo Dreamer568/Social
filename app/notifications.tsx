@@ -14,75 +14,79 @@ import { useRouter, Stack } from 'expo-router';
 import { SkeletonRow } from '../components/SkeletonRow';
 import { Avatar } from '../components/Avatar';
 import { Colors, Spacing } from '../constants/theme';
-
-const MOCK_NOTIFICATIONS = [
-  {
-    id: '1',
-    type: 'like',
-    user: { name: 'Jane Doe', avatar_url: 'https://i.pravatar.cc/150?u=jane' },
-    text: 'liked your post',
-    timestamp: '2m',
-    icon: 'heart',
-    iconColor: '#F4212E',
-  },
-  {
-    id: '2',
-    type: 'repost',
-    user: { name: 'Alex Smith', avatar_url: 'https://i.pravatar.cc/150?u=alex' },
-    text: 'reposted your post',
-    timestamp: '15m',
-    icon: 'repeat',
-    iconColor: '#00BA7C',
-  },
-  {
-    id: '3',
-    type: 'follow',
-    user: { name: 'Sarah Connor', avatar_url: 'https://i.pravatar.cc/150?u=sarah' },
-    text: 'followed you',
-    timestamp: '1h',
-    icon: 'person-add',
-    iconColor: '#1D9BF0',
-  },
-  {
-    id: '4',
-    type: 'mention',
-    user: { name: 'Jane Doe', avatar_url: 'https://i.pravatar.cc/150?u=jane' },
-    text: 'mentioned you in a post',
-    timestamp: '3h',
-    icon: 'at',
-    iconColor: '#1D9BF0',
-  },
-];
+import { api } from '../lib/api';
 
 export default function NotificationsScreen() {
   const [loading, setLoading] = useState(true);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const router = useRouter();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'dark'];
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1500);
-    return () => clearTimeout(timer);
+    loadNotifications();
   }, []);
 
-  const renderItem = ({ item }: { item: typeof MOCK_NOTIFICATIONS[0] }) => (
-    <TouchableOpacity style={[styles.row, { borderBottomColor: colors.border }]}>
-      <View style={styles.iconContainer}>
-        <Ionicons name={item.icon as any} size={24} color={item.iconColor} />
-      </View>
-      <View style={styles.contentContainer}>
-        <Avatar uri={item.user.avatar_url} size={32} />
-        <View style={styles.textRow}>
-          <Text style={[styles.text, { color: colors.text }]}>
-            <Text style={styles.bold}>{item.user.name}</Text> {item.text}
-          </Text>
-          <Text style={[styles.timestamp, { color: colors.textSecondary }]}>{item.timestamp}</Text>
+  const loadNotifications = async () => {
+    setLoading(true);
+    try {
+      const data = await api.notifications.getAll();
+      setNotifications(data);
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'follow': return { name: 'person-add', color: '#1D9BF0' };
+      case 'like': return { name: 'heart', color: '#F4212E' };
+      case 'comment': return { name: 'chatbubble', color: '#00BA7C' };
+      default: return { name: 'notifications', color: '#1D9BF0' };
+    }
+  };
+
+  const formatTimestamp = (date: string) => {
+    const now = new Date();
+    const created = new Date(date);
+    const diff = Math.floor((now.getTime() - created.getTime()) / 1000);
+    
+    if (diff < 60) return 'now';
+    if (diff < 3600) return `${Math.floor(diff / 60)}m`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
+    return `${Math.floor(diff / 86400)}d`;
+  };
+
+  const renderItem = ({ item }: { item: any }) => {
+    const iconConfig = getNotificationIcon(item.type);
+    const actor = item.actor || { name: 'Someone', avatar_url: null };
+
+    return (
+      <TouchableOpacity style={[styles.row, { borderBottomColor: colors.border }]}>
+        <View style={styles.iconContainer}>
+          <Ionicons name={iconConfig.name as any} size={24} color={iconConfig.color} />
         </View>
-      </View>
-    </TouchableOpacity>
-  );
+        <View style={styles.contentContainer}>
+          <Avatar uri={actor.avatar_url} size={32} />
+          <View style={styles.textRow}>
+            <Text style={[styles.text, { color: colors.text }]}>
+              <Text style={styles.bold}>{actor.name}</Text> {
+                item.type === 'follow' ? 'followed you' : 
+                item.type === 'like' ? 'liked your post' : 
+                item.type === 'comment' ? 'commented on your post' : 
+                'sent you a notification'
+              }
+            </Text>
+            <Text style={[styles.timestamp, { color: colors.textSecondary }]}>
+              {formatTimestamp(item.created_at)}
+            </Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
@@ -103,7 +107,7 @@ export default function NotificationsScreen() {
         />
       ) : (
         <FlatList
-          data={MOCK_NOTIFICATIONS}
+          data={notifications}
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}

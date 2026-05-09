@@ -114,14 +114,20 @@ export default function UserProfileScreen() {
           </Text>
 
           <View style={styles.profileStatsRow}>
-            <View style={styles.profileStatItem}>
+            <TouchableOpacity 
+              style={styles.profileStatItem}
+              onPress={() => router.push({ pathname: '/user/list', params: { userId: user.id, type: 'followers', name: user.name } })}
+            >
               <Text style={[styles.profileStatValue, { color: colors.text }]}>{stats.followers}</Text>
               <Text style={[styles.profileStatLabel, { color: colors.textSecondary }]}>Followers</Text>
-            </View>
-            <View style={styles.profileStatItem}>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.profileStatItem}
+              onPress={() => router.push({ pathname: '/user/list', params: { userId: user.id, type: 'following', name: user.name } })}
+            >
               <Text style={[styles.profileStatValue, { color: colors.text }]}>{stats.following}</Text>
               <Text style={[styles.profileStatLabel, { color: colors.textSecondary }]}>Following</Text>
-            </View>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.profileActionRow}>

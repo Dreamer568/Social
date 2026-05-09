@@ -60,6 +60,26 @@ export const api = {
       return data || [];
     },
 
+    getFollowers: async (userId: string) => {
+      const { data, error } = await supabase
+        .from('follows')
+        .select('follower:profiles!follows_follower_id_fkey(*)')
+        .eq('following_id', userId);
+      
+      if (error) throw error;
+      return data?.map(item => item.follower) || [];
+    },
+
+    getFollowing: async (userId: string) => {
+      const { data, error } = await supabase
+        .from('follows')
+        .select('following:profiles!follows_following_id_fkey(*)')
+        .eq('follower_id', userId);
+      
+      if (error) throw error;
+      return data?.map(item => item.following) || [];
+    },
+
     follow: async (followingId: string) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
@@ -69,6 +89,9 @@ export const api = {
         .insert([{ follower_id: user.id, following_id: followingId }]);
       
       if (error) throw error;
+
+      // Trigger notification
+      await api.notifications.create(followingId, 'follow', user.id);
     },
 
     unfollow: async (followingId: string) => {
@@ -172,6 +195,19 @@ export const api = {
         .order('created_at', { ascending: false });
       
       return data || [];
+    },
+
+    create: async (userId: string, type: string, actorId: string, targetId?: string) => {
+      const { error } = await supabase
+        .from('notifications')
+        .insert([{ 
+          user_id: userId, 
+          type, 
+          actor_id: actorId, 
+          target_id: targetId 
+        }]);
+      
+      if (error) console.error('Notification creation error:', error);
     }
   }
 };
