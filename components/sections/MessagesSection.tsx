@@ -11,7 +11,8 @@ import {
   Dimensions, 
   Pressable,
   Platform,
-  ScrollView
+  ScrollView,
+  KeyboardAvoidingView
 } from 'react-native';
 import { Avatar } from '../Avatar';
 import { Spacing, BorderRadius } from '../../constants/theme';
@@ -125,25 +126,30 @@ export const MessagesSection = ({ colors, router, messages, blockedUsers, onPin,
       </Pressable>
 
       <Modal visible={isRenameVisible} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={[styles.dialog, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.dialogTitle, { color: colors.text }]}>Rename Chat</Text>
-            <TextInput
-              style={[styles.dialogInput, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
-              value={newName}
-              onChangeText={setNewName}
-              autoFocus
-            />
-            <View style={styles.dialogButtons}>
-              <TouchableOpacity onPress={() => setIsRenameVisible(false)}>
-                <Text style={[styles.dialogButton, { color: colors.textSecondary }]}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={handleRename}>
-                <Text style={[styles.dialogButton, { color: colors.accent, fontWeight: '700' }]}>Save</Text>
-              </TouchableOpacity>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={[styles.dialog, { backgroundColor: colors.surface }]}>
+              <Text style={[styles.dialogTitle, { color: colors.text }]}>Rename Chat</Text>
+              <TextInput
+                style={[styles.dialogInput, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
+                value={newName}
+                onChangeText={setNewName}
+                autoFocus
+              />
+              <View style={styles.dialogButtons}>
+                <TouchableOpacity onPress={() => setIsRenameVisible(false)}>
+                  <Text style={[styles.dialogButton, { color: colors.textSecondary }]}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={handleRename}>
+                  <Text style={[styles.dialogButton, { color: colors.accent, fontWeight: '700' }]}>Save</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </Modal>
   );

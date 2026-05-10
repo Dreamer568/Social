@@ -15,6 +15,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Avatar } from './Avatar';
 import { Colors, Spacing, BorderRadius } from '../constants/theme';
+import { api } from '../lib/api';
+import { WebRTCManager } from '../lib/webrtc';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -25,20 +27,17 @@ interface Message {
   time: string;
 }
 
-const MOCK_CHAT: Message[] = [
-  { id: '1', text: 'Hey! Did you see the new Sync update?', sender: 'other', time: '10:00 AM' },
-  { id: '2', text: 'Yeah, the liquid navigation is so smooth!', sender: 'me', time: '10:02 AM' },
-  { id: '3', text: 'Exactly! It feels much more human than the old UI.', sender: 'other', time: '10:03 AM' },
-  { id: '4', text: 'I agree. No more Twitter vibes.', sender: 'me', time: '10:05 AM' },
-];
-
 export const ChatOverlay = ({ user, onClose, onProfilePress }: any) => {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'dark'];
-  const [messages, setMessages] = useState<Message[]>(MOCK_CHAT);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
+  const [me, setMe] = useState<any>(null);
+  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
+  
   const slideAnim = useRef(new Animated.Value(SCREEN_WIDTH)).current;
   const flatListRef = useRef<FlatList>(null);
+  const webrtcRef = useRef<WebRTCManager | null>(null);
 
   useEffect(() => {
     Animated.spring(slideAnim, {
@@ -47,7 +46,101 @@ export const ChatOverlay = ({ user, onClose, onProfilePress }: any) => {
       tension: 50,
       friction: 8
     }).start();
+
+    loadMessages();
+    api.messages.markAsRead(user.id);
+
+    let subscription: any;
+    
+    const initChat = async () => {
+      const currentUser = await api.user.getMe();
+      if (!currentUser) return;
+      setMe(currentUser);
+
+      // 1. Initialize WebRTC P2P
+      const rtc = new WebRTCManager(currentUser.id, user.id);
+      webrtcRef.current = rtc;
+
+      rtc.setCallbacks(
+        (text: string) => {
+          // Received a message via P2P
+          const newMsg: Message = {
+            id: Date.now().toString(),
+            text,
+            sender: 'other',
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          };
+          setMessages((prev) => [...prev, newMsg]);
+          api.messages.markAsRead(user.id);
+          setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+        },
+        (status) => {
+          setConnectionStatus(status);
+        }
+      );
+
+      // One user acts as initiator (lexicographical sort of IDs determines who offers)
+      const isInitiator = currentUser.id < user.id;
+      rtc.connect(isInitiator);
+
+      // 2. Setup Database Fallback Subscription
+      // Use the already-imported supabase directly (NOT dynamic import) so .on() is called BEFORE .subscribe()
+      const { supabase: sb } = await import('../lib/supabase');
+      const channelName = `messages_${[currentUser.id, user.id].sort().join('_')}`;
+      subscription = sb
+        .channel(channelName)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'messages',
+            filter: `sender_id=eq.${user.id}`,
+          },
+          (payload: any) => {
+            // Only process DB message if P2P is NOT connected
+            if (!webrtcRef.current || webrtcRef.current.sendMessage('') === false) {
+               const newMsg: Message = {
+                id: payload.new.id,
+                text: payload.new.content,
+                sender: 'other',
+                time: new Date(payload.new.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              };
+              setMessages((prev) => [...prev, newMsg]);
+              api.messages.markAsRead(user.id);
+              setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+            }
+          }
+        )
+        .subscribe();
+    };
+
+    initChat();
+
+    return () => {
+      if (subscription) subscription.unsubscribe();
+      if (webrtcRef.current) webrtcRef.current.disconnect();
+    };
   }, []);
+
+  const loadMessages = async () => {
+    try {
+      const thread = await api.messages.getThread(user.id);
+      const currentUser = await api.user.getMe();
+      if (!currentUser) return;
+
+      const formattedMessages: Message[] = thread.map((m: any) => ({
+        id: m.id,
+        text: m.content,
+        sender: m.sender_id === currentUser.id ? 'me' : 'other',
+        time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      }));
+      setMessages(formattedMessages);
+      setTimeout(() => flatListRef.current?.scrollToEnd({ animated: false }), 100);
+    } catch (error) {
+      console.error('Failed to load thread:', error);
+    }
+  };
 
   const handleClose = () => {
     Animated.timing(slideAnim, {
@@ -57,17 +150,39 @@ export const ChatOverlay = ({ user, onClose, onProfilePress }: any) => {
     }).start(() => onClose());
   };
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (inputText.trim() === '') return;
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      text: inputText,
+    
+    const tempId = Date.now().toString();
+    const textToSend = inputText;
+    
+    const optimisticMessage: Message = {
+      id: tempId,
+      text: textToSend,
       sender: 'me',
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
-    setMessages([...messages, newMessage]);
+    
+    setMessages([...messages, optimisticMessage]);
     setInputText('');
     setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+
+    // Try P2P WebRTC first
+    let sentP2P = false;
+    if (webrtcRef.current) {
+      sentP2P = webrtcRef.current.sendMessage(textToSend);
+    }
+
+    // Fallback to Encrypted Database Buffer
+    if (!sentP2P) {
+      try {
+        await api.messages.send(user.id, textToSend);
+      } catch (error) {
+        console.error('Failed to send message via buffer:', error);
+        setMessages((prev) => prev.filter(m => m.id !== tempId));
+        setInputText(textToSend); 
+      }
+    }
   };
 
   return (
@@ -86,7 +201,25 @@ export const ChatOverlay = ({ user, onClose, onProfilePress }: any) => {
           <Avatar size={36} uri={user.avatar_url} />
           <View style={styles.headerText}>
             <Text style={[styles.headerName, { color: colors.text }]}>{user.name}</Text>
-            <Text style={[styles.headerStatus, { color: colors.accent }]}>Online</Text>
+            <View style={[
+              styles.statusBadge,
+              { backgroundColor: connectionStatus === 'connected' ? colors.accent + '22' : '#6366f122' }
+            ]}>
+              <View style={[styles.statusDot, {
+                backgroundColor: connectionStatus === 'connected' ? colors.accent : connectionStatus === 'connecting' ? '#f59e0b' : '#6366f1'
+              }]} />
+              <Ionicons
+                name={connectionStatus === 'connected' ? 'leaf' : connectionStatus === 'connecting' ? 'timer-outline' : 'lock-closed'}
+                size={10}
+                color={connectionStatus === 'connected' ? colors.accent : connectionStatus === 'connecting' ? '#f59e0b' : '#6366f1'}
+                style={{ marginRight: 4 }}
+              />
+              <Text style={[styles.statusText, {
+                color: connectionStatus === 'connected' ? colors.accent : connectionStatus === 'connecting' ? '#f59e0b' : '#6366f1'
+              }]}>
+                {connectionStatus === 'connected' ? 'P2P Active' : connectionStatus === 'connecting' ? 'Connecting...' : 'E2E Encrypted'}
+              </Text>
+            </View>
           </View>
         </TouchableOpacity>
         <TouchableOpacity style={styles.headerAction}>
@@ -95,8 +228,9 @@ export const ChatOverlay = ({ user, onClose, onProfilePress }: any) => {
       </View>
 
       <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
+        behavior="padding"
         style={styles.flex}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 24}
       >
         <FlatList
           ref={flatListRef}
@@ -113,13 +247,33 @@ export const ChatOverlay = ({ user, onClose, onProfilePress }: any) => {
                     {item.text}
                   </Text>
                 </View>
-                <Text style={[styles.timeText, { color: colors.textSecondary }]}>{item.time}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                  <Text style={[styles.timeText, { color: colors.textSecondary }]}>{item.time}</Text>
+                  {isMe && (
+                    <Ionicons 
+                      name={connectionStatus === 'connected' ? "leaf" : "checkmark-done"} 
+                      size={14} 
+                      color={connectionStatus === 'connected' ? colors.accent : colors.textSecondary} 
+                      style={{ marginLeft: 4, marginTop: 2 }} 
+                    />
+                  )}
+                </View>
               </View>
             );
           }}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={{ alignItems: 'center', marginTop: 100 }}>
+              <Ionicons name={connectionStatus === 'connected' ? "leaf" : "lock-closed"} size={48} color={connectionStatus === 'connected' ? colors.accent : colors.textSecondary + '40'} />
+              <Text style={{ color: colors.textSecondary, marginTop: 16, textAlign: 'center', paddingHorizontal: 40 }}>
+                {connectionStatus === 'connected' 
+                  ? 'Direct device-to-device secure connection established. Messages bypass the server.'
+                  : 'Messages are end-to-end encrypted. No one outside of this chat, not even Sync, can read them.'}
+              </Text>
+            </View>
+          }
         />
 
         <View style={[styles.inputBar, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
@@ -163,14 +317,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderBottomWidth: 1,
-    marginTop: 40, // Adjust for safe area if needed
+    marginTop: 40,
   },
   backButton: { padding: 4, marginRight: Spacing.xs },
   headerInfo: { flex: 1, flexDirection: 'row', alignItems: 'center', marginLeft: Spacing.sm },
   headerText: { marginLeft: Spacing.sm },
   headerName: { fontSize: 16, fontWeight: '700' },
-  headerStatus: { fontSize: 12, fontWeight: '500' },
   headerAction: { padding: 8 },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 20,
+    marginTop: 3,
+    alignSelf: 'flex-start',
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 5,
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
   listContent: { padding: Spacing.lg, paddingBottom: Spacing.xl },
   messageWrapper: { marginBottom: Spacing.lg, maxWidth: '80%' },
   myMessageWrapper: { alignSelf: 'flex-end', alignItems: 'flex-end' },

@@ -1,0 +1,1 @@
+when i click in my profile on my post i get the follow option

@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, useColorScheme } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, useColorScheme, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Avatar } from './Avatar';
 import { Colors, Spacing, BorderRadius } from '../constants/theme';
 import { RichText } from './RichText';
+import { api } from '../lib/api';
 
 export interface PostProps {
   id: string;
@@ -22,6 +23,7 @@ export interface PostProps {
 }
 
 export const PostCard: React.FC<PostProps> = ({
+  id,
   user,
   content,
   media_url,
@@ -30,11 +32,63 @@ export const PostCard: React.FC<PostProps> = ({
   likes,
   comments,
 }) => {
-  const [expanded, setExpanded] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(likes);
+  const [likeLoading, setLikeLoading] = useState(false);
   const router = useRouter();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'dark'];
+
+  // Animation for the heart
+  const heartScale = useRef(new Animated.Value(1)).current;
+
+  // Check initial like state
+  useEffect(() => {
+    api.posts.hasLiked(id).then(setIsLiked).catch(() => {});
+  }, [id]);
+
+  const animateHeart = () => {
+    Animated.sequence([
+      Animated.spring(heartScale, { toValue: 1.4, useNativeDriver: true, speed: 40 }),
+      Animated.spring(heartScale, { toValue: 1, useNativeDriver: true, speed: 30 }),
+    ]).start();
+  };
+
+  const handleLikeToggle = async () => {
+    if (likeLoading) return;
+
+    // Optimistic update — update the UI instantly
+    const wasLiked = isLiked;
+    setIsLiked(!wasLiked);
+    setLikeCount(prev => wasLiked ? prev - 1 : prev + 1);
+    if (!wasLiked) animateHeart();
+
+    setLikeLoading(true);
+    try {
+      if (wasLiked) {
+        await api.posts.unlike(id);
+      } else {
+        await api.posts.like(id);
+      }
+    } catch (error) {
+      // Revert on failure
+      setIsLiked(wasLiked);
+      setLikeCount(prev => wasLiked ? prev + 1 : prev - 1);
+      console.error('Like error:', error);
+    } finally {
+      setLikeLoading(false);
+    }
+  };
+
+  const formatTime = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+    if (diff < 60) return 'now';
+    if (diff < 3600) return `${Math.floor(diff / 60)}m`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
+    return `${Math.floor(diff / 86400)}d`;
+  };
 
   return (
     <View style={[styles.card, { backgroundColor: colors.surface }]}>
@@ -50,7 +104,7 @@ export const PostCard: React.FC<PostProps> = ({
             {user.name}
           </Text>
           <Text style={[styles.handle, { color: colors.textSecondary }]} numberOfLines={1}>
-            @{user.handle} · {created_at}
+            @{user.handle} · {formatTime(created_at)}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.moreButton}>
@@ -78,15 +132,18 @@ export const PostCard: React.FC<PostProps> = ({
 
         <TouchableOpacity 
           style={styles.actionButton}
-          onPress={() => setIsLiked(!isLiked)}
+          onPress={handleLikeToggle}
+          activeOpacity={0.7}
         >
-          <Ionicons 
-            name={isLiked ? "heart" : "heart-outline"} 
-            size={20} 
-            color={isLiked ? colors.error : colors.textSecondary} 
-          />
-          <Text style={[styles.actionText, { color: isLiked ? colors.error : colors.textSecondary }]}>
-            {isLiked ? likes + 1 : likes}
+          <Animated.View style={{ transform: [{ scale: heartScale }] }}>
+            <Ionicons 
+              name={isLiked ? "heart" : "heart-outline"} 
+              size={20} 
+              color={isLiked ? '#F4212E' : colors.textSecondary} 
+            />
+          </Animated.View>
+          <Text style={[styles.actionText, { color: isLiked ? '#F4212E' : colors.textSecondary }]}>
+            {likeCount}
           </Text>
         </TouchableOpacity>
 

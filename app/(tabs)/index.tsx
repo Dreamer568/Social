@@ -55,12 +55,17 @@ export default function MainApp() {
   const refreshData = useCallback(async (showLoading = false) => {
     if (showLoading) setLoading(true);
     try {
-      const [allPosts, allMessages, userData] = await Promise.all([
-        api.posts.getAll(),
-        api.messages.getAll(),
+      // Fetch posts based on feed type
+      const feedPosts = feedType === 'World' 
+        ? await api.posts.getWorldFeed() 
+        : await api.posts.getFollowingFeed();
+
+      const [allMessages, userData] = await Promise.all([
+        api.messages.getConversations(),
         api.user.getMe()
       ]);
-      setPosts(allPosts as any);
+      
+      setPosts(feedPosts as any);
       setMessages(allMessages);
       setMe(userData);
 
@@ -73,7 +78,7 @@ export default function MainApp() {
     } finally {
       if (showLoading) setLoading(false);
     }
-  }, []);
+  }, [feedType]);
 
   useEffect(() => {
     refreshData(true);
