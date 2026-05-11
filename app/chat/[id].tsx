@@ -18,6 +18,7 @@ import { Avatar } from '../../components/Avatar';
 import { Colors, Spacing } from '../../constants/theme';
 import { api } from '../../lib/api';
 import { WebRTCManager } from '../../lib/webrtc';
+import { CallOverlay } from '../../components/CallOverlay';
 
 interface Message {
   id: string;
@@ -40,6 +41,7 @@ export default function ChatScreen() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
+  const [showCall, setShowCall] = useState(false);
 
   const flatListRef = useRef<FlatList>(null);
   const webrtcRef = useRef<WebRTCManager | null>(null);
@@ -194,7 +196,7 @@ export default function ChatScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
       <Stack.Screen options={{ headerShown: false }} />
       
       {/* Header */}
@@ -233,15 +235,16 @@ export default function ChatScreen() {
             </View>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.headerAction}>
+        <TouchableOpacity style={styles.headerAction} onPress={() => setShowCall(true)}>
           <Ionicons name="call-outline" size={22} color={colors.text} />
         </TouchableOpacity>
       </View>
 
 
       <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
+        behavior="padding"
         style={styles.flex}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 24}
       >
         <FlatList
           ref={flatListRef}
@@ -309,6 +312,13 @@ export default function ChatScreen() {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
+      {showCall && user && me && (
+        <CallOverlay
+          user={user}
+          me={me}
+          onClose={() => setShowCall(false)}
+        />
+      )}
     </SafeAreaView>
   );
 }

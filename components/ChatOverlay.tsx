@@ -17,6 +17,7 @@ import { Avatar } from './Avatar';
 import { Colors, Spacing, BorderRadius } from '../constants/theme';
 import { api } from '../lib/api';
 import { WebRTCManager } from '../lib/webrtc';
+import { CallOverlay } from './CallOverlay';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -34,6 +35,7 @@ export const ChatOverlay = ({ user, onClose, onProfilePress }: any) => {
   const [inputText, setInputText] = useState('');
   const [me, setMe] = useState<any>(null);
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
+  const [showCall, setShowCall] = useState(false);
   
   const slideAnim = useRef(new Animated.Value(SCREEN_WIDTH)).current;
   const flatListRef = useRef<FlatList>(null);
@@ -222,7 +224,7 @@ export const ChatOverlay = ({ user, onClose, onProfilePress }: any) => {
             </View>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.headerAction}>
+        <TouchableOpacity style={styles.headerAction} onPress={() => setShowCall(true)}>
           <Ionicons name="call-outline" size={22} color={colors.text} />
         </TouchableOpacity>
       </View>
@@ -297,6 +299,13 @@ export const ChatOverlay = ({ user, onClose, onProfilePress }: any) => {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
+      {showCall && me && (
+        <CallOverlay
+          user={user}
+          me={me}
+          onClose={() => setShowCall(false)}
+        />
+      )}
     </Animated.View>
   );
 };
