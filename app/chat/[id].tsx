@@ -1,24 +1,27 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  FlatList, 
-  TextInput, 
-  TouchableOpacity, 
-  KeyboardAvoidingView, 
-  Platform, 
-  useColorScheme,
-  ActivityIndicator
-} from 'react-native';
-import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  useColorScheme,
+  View
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Avatar } from '../../components/Avatar';
+import { CallOverlay } from '../../components/CallOverlay';
+import { CallManager } from '../../lib/callManager';
+
+
 import { Colors, Spacing } from '../../constants/theme';
 import { api } from '../../lib/api';
 import { WebRTCManager } from '../../lib/webrtc';
-import { CallOverlay } from '../../components/CallOverlay';
 
 interface Message {
   id: string;
@@ -42,9 +45,12 @@ export default function ChatScreen() {
   const [inputText, setInputText] = useState('');
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
   const [showCall, setShowCall] = useState(false);
+  const [incomingOffer, setIncomingOffer] = useState<any>(null);
 
   const flatListRef = useRef<FlatList>(null);
   const webrtcRef = useRef<WebRTCManager | null>(null);
+  const callManagerRef = useRef<any>(null);
+
 
   useEffect(() => {
     let subscription: any;
@@ -76,6 +82,18 @@ export default function ChatScreen() {
         // 3. Initialize WebRTC P2P
         const rtc = new WebRTCManager(currentUser.id, targetUser.id);
         webrtcRef.current = rtc;
+
+        // 3b. Listen for incoming calls and immediately show full-screen incoming UI
+        // Incoming offer is signaled via Supabase Realtime broadcast on the call channel.
+        const cm = new CallManager(currentUser.id, targetUser.id);
+        callManagerRef.current = cm;
+        cm.listenForIncoming((offerData: any) => {
+          setIncomingOffer(offerData);
+          setShowCall(true);
+        });
+
+
+
 
         rtc.setCallbacks(
           (text: string) => {
@@ -138,7 +156,9 @@ export default function ChatScreen() {
     return () => {
       if (subscription) subscription.unsubscribe();
       if (webrtcRef.current) webrtcRef.current.disconnect();
+      if (callManagerRef.current) callManagerRef.current.cleanup();
     };
+
   }, [handle]);
 
   const sendMessage = async () => {
@@ -316,9 +336,14 @@ export default function ChatScreen() {
         <CallOverlay
           user={user}
           me={me}
-          onClose={() => setShowCall(false)}
+          incomingOffer={incomingOffer}
+          onClose={() => {
+            setShowCall(false);
+            setIncomingOffer(null);
+          }}
         />
       )}
+
     </SafeAreaView>
   );
 }

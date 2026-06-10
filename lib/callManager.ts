@@ -50,8 +50,12 @@ export class CallManager {
   /** Initiate an outgoing call */
   public async startCall(): Promise<void> {
     this.onStatusChange?.('calling');
-    await this.setupPeerConnection();
+
+    // Important: set up signaling before we send the offer so the callee can respond
+    // and so we can receive answer/ice promptly.
     this.setupSignaling();
+
+    await this.setupPeerConnection();
 
     const offer = await this.pc.createOffer({ offerToReceiveAudio: true });
     await this.pc.setLocalDescription(offer);
@@ -60,13 +64,16 @@ export class CallManager {
     this.sendSignal('call-offer', offer);
   }
 
+
   /** Answer an incoming call */
   public async answerCall(offerData: any): Promise<void> {
     this.onStatusChange?.('active');
-    await this.setupPeerConnection();
+    // Ensure we can receive ICE and the remote description is set after signaling starts.
     this.setupSignaling();
+    await this.setupPeerConnection();
 
     await this.setRemoteDescriptionAndFlush(offerData);
+
     const answer = await this.pc.createAnswer();
     await this.pc.setLocalDescription(answer);
     this.sendSignal('call-answer', answer);
@@ -90,12 +97,23 @@ export class CallManager {
 
   /** Listen for an incoming call from a peer */
   public listenForIncoming(onIncoming: (offerData: any) => void): void {
-    this.setupSignalingListenerOnly(onIncoming);
+    this.setupIncomingOfferListener(onIncoming);
   }
+
+
 
   private async setupPeerConnection(): Promise<void> {
     // Get microphone access
-    this.localStream = await mediaDevices.getUserMedia({ audio: true, video: false });
+    try {
+      // In some RN/Expo environments the first getUserMedia can fail due to missing
+      // permissions / device enumeration. We surface the error and avoid silent failures.
+      this.localStream = await mediaDevices.getUserMedia({ audio: true, video: false });
+    } catch (e) {
+      console.error('[CallManager] getUserMedia failed:', e);
+      this.onStatusChange?.('ended');
+      throw e;
+    }
+
 
     this.pc = new PeerConnection(configuration);
     const pcAny: any = this.pc;
@@ -135,10 +153,31 @@ export class CallManager {
     await this.pc.setRemoteDescription(new SessionDescription(desc));
     this.remoteDescriptionSet = true;
     for (const candidate of this.pendingCandidates) {
-      try { await this.pc.addIceCandidate(new IceCandidate(candidate)); } catch {}
+      try {
+        await this.pc.addIceCandidate(new IceCandidate(candidate));
+      } catch {}
     }
     this.pendingCandidates = [];
   }
+
+
+  // Expose signaling setup so callers can listen for incoming offers.
+  // Ensures call-offer is handled by the same signaling channel.
+  private setupIncomingOfferListener(onIncoming: (offerData: any) => void): void {
+    const channelName = `call_${[this.myId, this.peerId].sort().join('_')}`;
+    this.signalingChannel = supabase.channel(channelName);
+
+    this.signalingChannel
+      .on('broadcast', { event: 'call-signal' }, ({ payload }: any) => {
+        if (payload.target !== this.myId) return;
+        if (payload.type === 'call-offer') {
+          this.onStatusChange?.('ringing');
+          onIncoming(payload.data);
+        }
+      })
+      .subscribe();
+  }
+
 
   private setupSignaling(): void {
     const channelName = `call_${[this.myId, this.peerId].sort().join('_')}`;
@@ -150,9 +189,11 @@ export class CallManager {
 
         switch (payload.type) {
           case 'call-answer':
+            console.log('[CallManager] recv call-answer');
             await this.setRemoteDescriptionAndFlush(payload.data);
             break;
           case 'call-ice':
+            // ICE may arrive before remote description.
             if (this.remoteDescriptionSet) {
               try { await this.pc?.addIceCandidate(new IceCandidate(payload.data)); } catch {}
             } else {
@@ -168,20 +209,8 @@ export class CallManager {
       .subscribe();
   }
 
-  private setupSignalingListenerOnly(onIncoming: (offerData: any) => void): void {
-    const channelName = `call_${[this.myId, this.peerId].sort().join('_')}`;
-    this.signalingChannel = supabase.channel(channelName);
 
-    this.signalingChannel
-      .on('broadcast', { event: 'call-signal' }, ({ payload }: any) => {
-        if (payload.target !== this.myId) return;
-        if (payload.type === 'call-offer') {
-          this.onStatusChange?.('ringing');
-          onIncoming(payload.data);
-        }
-      })
-      .subscribe();
-  }
+
 
   private sendSignal(type: string, data: any): void {
     this.signalingChannel?.send({

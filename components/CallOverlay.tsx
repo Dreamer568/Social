@@ -12,6 +12,7 @@ import { Colors } from '../constants/theme';
 import { CallManager, CallStatus } from '../lib/callManager';
 import { Avatar } from './Avatar';
 
+
 interface CallOverlayProps {
   user: {
     id: string;
@@ -33,6 +34,8 @@ export const CallOverlay = ({ user, me, onClose, incomingOffer }: CallOverlayPro
   const [status, setStatus] = useState<CallStatus>(incomingOffer ? 'ringing' : 'calling');
   const [isMuted, setIsMuted] = useState(false);
   const [duration, setDuration] = useState(0);
+  const [remoteStream, setRemoteStream] = useState<any>(null);
+
 
   const callManagerRef = useRef<CallManager | null>(null);
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -85,6 +88,11 @@ export const CallOverlay = ({ user, me, onClose, incomingOffer }: CallOverlayPro
         setTimeout(() => onClose(), 1000);
       }
     };
+
+    manager.onRemoteStream = (stream: any) => {
+      setRemoteStream(stream);
+    };
+
 
     if (incomingOffer) {
       // Waiting for manual acceptance
@@ -151,8 +159,18 @@ export const CallOverlay = ({ user, me, onClose, incomingOffer }: CallOverlayPro
           color: status === 'active' ? colors.accent : colors.textSecondary
         }]}>{statusLabel}</Text>
 
+        {remoteStream ? (
+          <RTCView
+            streamURL={remoteStream.toURL?.()}
+            style={styles.remoteAudioView}
+            objectFit="cover"
+            mirror={false}
+          />
+        ) : null}
+
         {/* Control Buttons */}
         <View style={styles.controls}>
+
           <TouchableOpacity
             style={[styles.controlBtn, { backgroundColor: isMuted ? colors.accent : colors.surface }]}
             onPress={handleMute}
@@ -268,5 +286,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#22c55e',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+
+  remoteAudioView: {
+    position: 'absolute',
+    width: 0,
+    height: 0,
+    opacity: 0,
   },
 });
